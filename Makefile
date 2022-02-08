@@ -1,5 +1,5 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
-HOSTNAME=hashicorp.com
+HOSTNAME=cloudnativetoolkit.dev
 NAMESPACE=cntk
 NAME=gitops
 BINARY=terraform-provider-${NAME}

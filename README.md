@@ -19,7 +19,7 @@ Add the gitops module to the required providers list:
 terraform {
   required_providers {
     gitops = {
-      source  = "hashicorp.com/cntk/gitops"
+      source  = "cloutnativetoolkit.dev/cntk/gitops"
     }
   }
 }
