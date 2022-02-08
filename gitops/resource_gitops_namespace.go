@@ -28,7 +28,8 @@ func resourceGitopsNamespace() *schema.Resource {
 			},
 			"server_name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "default",
 			},
 			"credentials": &schema.Schema{
 				Type:      schema.TypeString,
