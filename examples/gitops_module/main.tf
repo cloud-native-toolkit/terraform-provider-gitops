@@ -7,13 +7,13 @@ terraform {
   }
 }
 
-resource gitops_module ns {
+resource gitops_module module {
     name = var.name
     namespace = var.namespace
     content_dir = "${path.module}/yaml"
     server_name = var.server_name
     layer = var.layer
     type = var.type
-    config = var.config
-    credentials = var.credentials
+    config = yamlencode(var.config)
+    credentials = yamlencode(var.credentials)
 }

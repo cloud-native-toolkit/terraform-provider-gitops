@@ -31,7 +31,8 @@ func resourceGitopsModule() *schema.Resource {
 			},
 			"server_name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "default",
 			},
 			"layer": &schema.Schema{
 				Type:     schema.TypeString,
@@ -39,7 +40,8 @@ func resourceGitopsModule() *schema.Resource {
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "base",
 			},
 			"credentials": &schema.Schema{
 				Type:      schema.TypeString,
