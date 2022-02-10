@@ -1,8 +1,7 @@
 terraform {
   required_providers {
     gitops = {
-      version = "0.1"
-      source  = "hashicorp.com/cntk/gitops"
+      source  = "cloud-native-toolkit/gitops"
     }
   }
 }

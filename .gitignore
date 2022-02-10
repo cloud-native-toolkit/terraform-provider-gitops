@@ -64,3 +64,5 @@ terraform.rc
 terraform
 .idea/
 goreleaser
+git_token
+git_repo
