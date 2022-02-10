@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"io"
 	"log"
 	"os/exec"
 )
@@ -31,6 +31,11 @@ func resourceGitopsNamespace() *schema.Resource {
 				Optional: true,
 				Default:  "default",
 			},
+			"branch": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "main",
+			},
 			"credentials": &schema.Schema{
 				Type:      schema.TypeString,
 				Required:  true,
@@ -39,10 +44,6 @@ func resourceGitopsNamespace() *schema.Resource {
 			"config": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"username": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 		},
 	}
@@ -59,6 +60,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	name := d.Get("name").(string)
 	contentDir := d.Get("content_dir").(string)
 	serverName := d.Get("server_name").(string)
+	branch := d.Get("branch").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
@@ -70,7 +72,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	gitopsMutexKV.Lock(username)
 
-	log.Printf("Provisioning gitops namespace: %s, %s, ", name, serverName)
+	tflog.Info(ctx, "Provisioning gitops namespace: name=%s, serverName=%s", name, serverName)
 
 	defer gitopsMutexKV.Unlock(username)
 
@@ -80,6 +82,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		name,
 		"--contentDir", contentDir,
 		"--lock", lock,
+		"--branch", branch,
 		"--serverName", serverName,
 		"--debug")
 
@@ -89,16 +92,17 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	cmd.Env = updatedEnv
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = io.MultiWriter(log.Writer(), &stdoutBuf)
-	cmd.Stderr = io.MultiWriter(log.Writer(), &stderrBuf)
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
 
 	err := cmd.Run()
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	tflog.Info(ctx, stdoutBuf.String())
+
 	d.SetId(name + ":" + serverName + ":" + contentDir)
-	err = d.Set("username", username)
 
 	return diags
 }
@@ -134,12 +138,13 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
+	branch := d.Get("branch").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
 	gitopsMutexKV.Lock(username)
 
-	log.Printf("Destroying gitops namespace: %s, %s, ", name, serverName)
+	tflog.Info(ctx, "Destroying gitops namespace: name=%s, serverName=%s", name, serverName)
 
 	defer gitopsMutexKV.Unlock(username)
 
@@ -150,19 +155,22 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 		"--delete",
 		"--lock", lock,
 		"--serverName", serverName,
+		"--branch", branch,
 		"--debug")
 
 	updatedEnv := append(cmd.Env, "GIT_CREDENTIALS="+credentials)
 	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = io.MultiWriter(log.Writer(), &stdoutBuf)
-	cmd.Stderr = io.MultiWriter(log.Writer(), &stderrBuf)
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
 
 	err := cmd.Run()
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	tflog.Info(ctx, stdoutBuf.String())
 
 	d.SetId("")
 

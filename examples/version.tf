@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     gitops = {
-      source  = "cloudnativetoolkit.dev/cntk/gitops"
+      source  = "cloud-native-toolkit/gitops"
     }
   }
 }
