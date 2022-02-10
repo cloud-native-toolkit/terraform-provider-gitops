@@ -111,6 +111,8 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
+	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
+	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
 	cmd.Env = updatedEnv
 
@@ -186,6 +188,8 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
+	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
+	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = io.MultiWriter(log.Writer(), &stdoutBuf)
