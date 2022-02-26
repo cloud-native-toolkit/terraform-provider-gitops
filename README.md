@@ -6,7 +6,7 @@ and `gitops-module` commands in the [igc](https://github.com/cloud-native-toolki
 
 The provider serves two purposes with this version:
 
-- Provides a more terraform-friendly integration with other terraform modules. This provider removes the need for null_resource resources to call the cli.
+- Provides more terraform-friendly integration with other terraform modules. This provider removes the need for null_resource resources to call the cli.
 - Performs mutex locking on the git username to prevent concurrent access of the git apis and associated rate limits.
 
 ## Usage

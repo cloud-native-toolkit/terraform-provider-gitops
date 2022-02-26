@@ -1,7 +1,7 @@
 package gitops
 
 import (
-	"bytes"
+	"bufio"
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -99,16 +99,26 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	cmd.Env = updatedEnv
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
+    stdout, err := cmd.StdoutPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
 
-	err := cmd.Run()
-	if err != nil {
+    // start the command after having set up the pipe
+    if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
-	}
+    }
 
-	tflog.Info(ctx, stdoutBuf.String())
+    // read command's stdout line by line
+    in := bufio.NewScanner(stdout)
+
+    for in.Scan() {
+        log.Printf(in.Text()) // write each line to your log, or anything you need
+    }
+
+    if err := in.Err(); err != nil {
+        log.Printf("error: %s", err)
+    }
 
 	d.SetId(name + ":" + serverName + ":" + contentDir)
 
@@ -177,16 +187,27 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
 
-	err := cmd.Run()
-	if err != nil {
+    stdout, err := cmd.StdoutPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
+
+    // start the command after having set up the pipe
+    if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
-	}
+    }
 
-	tflog.Info(ctx, stdoutBuf.String())
+    // read command's stdout line by line
+    in := bufio.NewScanner(stdout)
+
+    for in.Scan() {
+        log.Printf(in.Text()) // write each line to your log, or anything you need
+    }
+
+    if err := in.Err(); err != nil {
+        log.Printf("error: %s", err)
+    }
 
 	d.SetId("")
 

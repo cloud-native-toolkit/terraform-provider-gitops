@@ -1,12 +1,11 @@
 package gitops
 
 import (
-	"bytes"
+    "bufio"
 	"context"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"io"
 	"log"
 	"os/exec"
 )
@@ -116,14 +115,26 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 
 	cmd.Env = updatedEnv
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = io.MultiWriter(log.Writer(), &stdoutBuf)
-	cmd.Stderr = io.MultiWriter(log.Writer(), &stderrBuf)
+    stdout, err := cmd.StdoutPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
 
-	err := cmd.Run()
-	if err != nil {
+    // start the command after having set up the pipe
+    if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
-	}
+    }
+
+    // read command's stdout line by line
+    in := bufio.NewScanner(stdout)
+
+    for in.Scan() {
+        log.Printf(in.Text()) // write each line to your log, or anything you need
+    }
+
+    if err := in.Err(); err != nil {
+        log.Printf("error: %s", err)
+    }
 
 	d.SetId(namespace + ":" + name + ":" + serverName + ":" + contentDir)
 
@@ -191,18 +202,26 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = io.MultiWriter(log.Writer(), &stdoutBuf)
-	cmd.Stderr = io.MultiWriter(log.Writer(), &stderrBuf)
+    stdout, err := cmd.StdoutPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
 
-	err := cmd.Run()
-	if err != nil {
+    // start the command after having set up the pipe
+    if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
-	}
+    }
 
-	if err != nil {
-		return diag.FromErr(err)
-	}
+    // read command's stdout line by line
+    in := bufio.NewScanner(stdout)
+
+    for in.Scan() {
+        log.Printf(in.Text()) // write each line to your log, or anything you need
+    }
+
+    if err := in.Err(); err != nil {
+        log.Printf("error: %s", err)
+    }
 
 	d.SetId("")
 
