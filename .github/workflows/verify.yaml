@@ -1,9 +1,9 @@
-name: Verify PR
+name: Verify
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the main branch
 on:
-  pull_request:
+  push:
     branches: [ main ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -45,9 +45,8 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-  verifyAll:
+  release:
     needs: [verify,verifyReleaser]
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: echo "Success"
+    uses: cloud-native-toolkit/action-workflows/.github/workflows/release-module.yaml@v1
+    secrets:
+      TOKEN: ${{ secrets.TOKEN }}
