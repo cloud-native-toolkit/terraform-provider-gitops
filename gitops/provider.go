@@ -33,6 +33,11 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("GITOPS_LOCK", "branch"),
 			},
+			"debug": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("GITOPS_DEBUG", "false"),
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"gitops_namespace": resourceGitopsNamespace(),
@@ -48,6 +53,7 @@ type ProviderConfig struct {
 	Username string
 	Token    string
 	Lock     string
+	Debug    string
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -55,6 +61,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	username := d.Get("username").(string)
 	token := d.Get("token").(string)
 	lock := d.Get("lock").(string)
+	debug := d.Get("debug").(string)
 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
@@ -64,6 +71,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		Username: username,
 		Token:    token,
 		Lock:     lock,
+		Debug:    debug,
 	}
 
 	return c, diags

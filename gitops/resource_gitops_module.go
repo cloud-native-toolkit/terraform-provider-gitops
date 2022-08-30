@@ -79,6 +79,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 
 	binDir := config.BinDir
 	lock := config.Lock
+	debug := config.Debug
 
 	// this should be replaced with the actual git user
 	username := "cloudnativetoolkit"
@@ -100,7 +101,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		"--layer", layer,
 		"--branch", branch,
 		"--type", moduleType,
-		"--debug")
+		"--debug", debug)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -129,11 +130,15 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
     in := bufio.NewScanner(stdout)
 
     for in.Scan() {
-        log.Printf(in.Text()) // write each line to your log, or anything you need
+        if debug == "true" {
+          tflog.Debug(ctx, in.Text())
+        } else {
+          tflog.Info(ctx, in.Text())
+        }
     }
 
     if err := in.Err(); err != nil {
-        log.Printf("error: %s", err)
+        tflog.Error(ctx, "Error processing stream")
     }
 
 	d.SetId(namespace + ":" + name + ":" + serverName + ":" + contentDir)
