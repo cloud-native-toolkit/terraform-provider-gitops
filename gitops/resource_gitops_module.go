@@ -80,6 +80,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
+	caCert := config.CaCertFile
 
 	// this should be replaced with the actual git user
 	username := "cloudnativetoolkit"
@@ -101,6 +102,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		"--layer", layer,
 		"--branch", branch,
 		"--type", moduleType,
+		"--caCert", caCert,
 		"--debug", debug)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
