@@ -77,7 +77,7 @@ func createCaCertFile(caCert string) (string, error) {
         return "", err
     }
 
-	caCertFile = filepath.Join(basePath, "git-ca.crt")
+	caCertFile := filepath.Join(basePath, "git-ca.crt")
 
     decodedCaCert, err := b64.StdEncoding.DecodeString(caCert)
     if err != nil {
