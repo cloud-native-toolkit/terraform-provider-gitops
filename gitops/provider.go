@@ -70,6 +70,29 @@ type ProviderConfig struct {
 	CaCertFile string
 }
 
+func createCaCertFile(caCert string) (string, error) {
+    // write contents of caCert to caCertFile
+   	basePath, err := os.Getwd()
+    if err != nil {
+        return "", err
+    }
+
+	caCertFile = filepath.Join(basePath, "git-ca.crt")
+
+    decodedCaCert, err := b64.StdEncoding.DecodeString(caCert)
+    if err != nil {
+        return "", err
+    }
+
+    d1 := []byte(decodedCaCert)
+    err = os.WriteFile(caCertFile, d1, 0666)
+    if err != nil {
+        return "", err
+    }
+
+    return caCertFile, nil
+}
+
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	binDir := d.Get("bin_dir").(string)
 	username := d.Get("username").(string)
@@ -83,24 +106,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	if len(caCert) > 0 && len(caCertFile) == 0 {
-	    // write contents of caCert to caCertFile
-   	    basePath, err := os.Getwd()
-        if err != nil {
-            return diag.FromErr(err)
-        }
-
-	    caCertFile = filepath.Join(basePath, "git-ca.crt")
-
-        decodedCaCert, err := b64.StdEncoding.DecodeString(caCert)
-        if err != nil {
-            return diag.FromErr(err)
-        }
-
-        d1 := []byte(decodedCaCert)
-        err = os.WriteFile(caCertFile, d1, 0666)
-        if err != nil {
-            return diag.FromErr(err)
-        }
+	    caCertFile, err = createCaCertFile(caCert)
+	    if err != nil {
+	        return nil, err
+	    }
 	}
 
 	c := &ProviderConfig{
