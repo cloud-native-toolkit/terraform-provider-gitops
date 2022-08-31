@@ -108,7 +108,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	if len(caCert) > 0 && len(caCertFile) == 0 {
 	    newCaCertFile, err := createCaCertFile(caCert)
 	    if err != nil {
-	        return nil, err
+	        return nil, diag.FromErr(err)
 	    }
 
 	    caCertFile = newCaCertFile
