@@ -106,10 +106,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	if len(caCert) > 0 && len(caCertFile) == 0 {
-	    caCertFile, err = createCaCertFile(caCert)
+	    newCaCertFile, err := createCaCertFile(caCert)
 	    if err != nil {
 	        return nil, err
 	    }
+
+	    caCertFile = newCaCertFile
 	}
 
 	c := &ProviderConfig{
