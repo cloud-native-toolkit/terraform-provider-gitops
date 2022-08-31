@@ -44,9 +44,3 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-  release:
-    needs: [verify,verifyReleaser]
-    uses: cloud-native-toolkit/action-workflows/.github/workflows/release-module.yaml@v1
-    secrets:
-      TOKEN: ${{ secrets.TOKEN }}
