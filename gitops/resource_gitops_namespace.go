@@ -67,6 +67,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
+	caCert := config.CaCertFile
 
 	// this should be replaced with the actual git user
 	username := "cloudnativetoolkit"
@@ -85,6 +86,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		"--lock", lock,
 		"--branch", branch,
 		"--serverName", serverName,
+		"--caCert", caCert,
 		"--debug", debug)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
