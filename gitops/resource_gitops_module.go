@@ -48,6 +48,11 @@ func resourceGitopsModule() *schema.Resource {
 				Optional: true,
 				Default:  "base",
 			},
+			"value_files": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 			"credentials": &schema.Schema{
 				Type:      schema.TypeString,
 				Required:  true,
@@ -74,6 +79,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	layer := d.Get("layer").(string)
 	branch := d.Get("branch").(string)
 	moduleType := d.Get("type").(string)
+	valueFiles := d.Get("value_files").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
@@ -102,6 +108,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		"--layer", layer,
 		"--branch", branch,
 		"--type", moduleType,
+		"--valueFiles", valueFiles,
 		"--caCert", caCert,
 		"--debug", debug)
 
@@ -165,8 +172,11 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 
 	config := m.(*ProviderConfig)
 
+
 	binDir := config.BinDir
 	lock := config.Lock
+	debug := config.Debug
+	caCert := config.CaCertFile
 
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
@@ -174,6 +184,7 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 	layer := d.Get("layer").(string)
 	branch := d.Get("branch").(string)
 	moduleType := d.Get("type").(string)
+	valueFiles := d.Get("value_files").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
@@ -196,7 +207,9 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 		"--layer", layer,
 		"--branch", branch,
 		"--type", moduleType,
-		"--debug")
+		"--valueFiles", valueFiles,
+		"--caCert", caCert,
+		"--debug", debug)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -223,7 +236,11 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
     in := bufio.NewScanner(stdout)
 
     for in.Scan() {
-        log.Printf(in.Text()) // write each line to your log, or anything you need
+        if debug == "true" {
+          tflog.Debug(ctx, in.Text())
+        } else {
+          tflog.Info(ctx, in.Text())
+        }
     }
 
     if err := in.Err(); err != nil {
