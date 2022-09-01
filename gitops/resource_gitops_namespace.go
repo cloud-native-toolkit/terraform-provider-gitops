@@ -36,6 +36,11 @@ func resourceGitopsNamespace() *schema.Resource {
 				Optional: true,
 				Default:  "main",
 			},
+			"value_files": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 			"credentials": &schema.Schema{
 				Type:      schema.TypeString,
 				Required:  true,
@@ -61,6 +66,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	contentDir := d.Get("content_dir").(string)
 	serverName := d.Get("server_name").(string)
 	branch := d.Get("branch").(string)
+	valueFiles := d.Get("value_files").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
@@ -86,6 +92,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		"--lock", lock,
 		"--branch", branch,
 		"--serverName", serverName,
+		"--valueFiles", valueFiles,
 		"--caCert", caCert,
 		"--debug", debug)
 
@@ -158,12 +165,15 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	binDir := config.BinDir
 	lock := config.Lock
+	debug := config.Debug
+	caCert := config.CaCertFile
 
 	username := "cloudnativetoolkit"
 
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
 	branch := d.Get("branch").(string)
+	valueFiles := d.Get("value_files").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
@@ -181,7 +191,9 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 		"--lock", lock,
 		"--serverName", serverName,
 		"--branch", branch,
-		"--debug")
+		"--valueFiles", valueFiles,
+		"--caCert", caCert,
+		"--debug", debug)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -209,7 +221,11 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
     in := bufio.NewScanner(stdout)
 
     for in.Scan() {
-        log.Printf(in.Text()) // write each line to your log, or anything you need
+        if debug == "true" {
+          tflog.Debug(ctx, in.Text())
+        } else {
+          tflog.Info(ctx, in.Text())
+        }
     }
 
     if err := in.Err(); err != nil {
