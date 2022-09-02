@@ -85,7 +85,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	defer gitopsMutexKV.Unlock(username)
 
 	cmd := exec.Command(
-		binDir+"/igc",
+		filepath.Join(binDir, "igc"),
 		"gitops-namespace",
 		name,
 		"--contentDir", contentDir,
@@ -95,6 +95,8 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		"--valueFiles", valueFiles,
 		"--caCert", caCert,
 		"--debug", debug)
+
+    tflog.Debug(ctx, "Executing command: " + cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -130,8 +132,14 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
         }
     }
 
+    if err := cmd.Wait(); err != nil {
+        tflog.Error(ctx, "Error running command")
+        return diag.FromErr(err)
+    }
+
     if err := in.Err(); err != nil {
         tflog.Error(ctx, "Error processing stream")
+        return diag.FromErr(err)
     }
 
 	d.SetId(name + ":" + serverName + ":" + contentDir)

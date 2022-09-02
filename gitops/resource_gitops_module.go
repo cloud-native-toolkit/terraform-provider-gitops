@@ -151,12 +151,12 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 
     if err := cmd.Wait(); err != nil {
         tflog.Error(ctx, "Error running command")
-        return diag.fromErr(err)
+        return diag.FromErr(err)
     }
 
     if err := in.Err(); err != nil {
         tflog.Error(ctx, "Error processing stream")
-        return diag.fromErr(err)
+        return diag.FromErr(err)
     }
 
 	d.SetId(namespace + ":" + name + ":" + serverName + ":" + contentDir)
