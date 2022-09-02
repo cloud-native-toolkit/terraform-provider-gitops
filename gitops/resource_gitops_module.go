@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 	"os/exec"
 	"path/filepath"
+	"fmt"
 )
 
 func resourceGitopsModule() *schema.Resource {
@@ -94,24 +94,34 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 
 	gitopsMutexKV.Lock(username)
 
-	tflog.Info(ctx, "Provisioning gitops module: name=%s, namespace=%s, serverName=%s", name, namespace, serverName)
-
 	defer gitopsMutexKV.Unlock(username)
 
-	cmd := exec.Command(
-		filepath.Join(binDir, "igc"),
-		"gitops-module",
-		name,
-		"-n", namespace,
-		"--lock", lock,
-		"--contentDir", contentDir,
-		"--serverName", serverName,
-		"--layer", layer,
-		"--branch", branch,
-		"--type", moduleType,
-		"--valueFiles", valueFiles,
-		"--caCert", caCert,
-		"--debug", debug)
+	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops module: name=%s, namespace=%s, serverName=%s", name, namespace, serverName))
+
+	var args = []string{
+	  "gitops-module",
+	  name,
+	  "-n", namespace,
+	  "--contentDir", contentDir,
+	  "--branch", branch,
+	  "--serverName", serverName,
+	  "--layer", layer,
+      "--type", moduleType}
+
+    if len(lock) > 0 {
+      args = append(args, "--lock", lock)
+    }
+    if len(valueFiles) > 0 {
+      args = append(args, "--valueFiles", valueFiles)
+    }
+    if len(caCert) > 0 {
+      args = append(args, "--caCert", caCert)
+    }
+    if len(debug) > 0 {
+      args = append(args, "--debug", debug)
+    }
+
+	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
 
     tflog.Debug(ctx, "Executing command: " + cmd.String())
 
@@ -181,7 +191,6 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 
 	config := m.(*ProviderConfig)
 
-
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
@@ -189,6 +198,7 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
+	contentDir := d.Get("content_dir").(string)
 	serverName := d.Get("server_name").(string)
 	layer := d.Get("layer").(string)
 	branch := d.Get("branch").(string)
@@ -201,24 +211,37 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 
 	gitopsMutexKV.Lock(username)
 
-	tflog.Info(ctx, "Destroying gitops module: name=%s, namespace=%s, serverName=%s", name, namespace, serverName)
-
 	defer gitopsMutexKV.Unlock(username)
 
-	cmd := exec.Command(
-		binDir+"/igc",
-		"gitops-module",
-		name,
-		"-n", namespace,
-		"--delete",
-		"--lock", lock,
-		"--serverName", serverName,
-		"--layer", layer,
-		"--branch", branch,
-		"--type", moduleType,
-		"--valueFiles", valueFiles,
-		"--caCert", caCert,
-		"--debug", debug)
+	tflog.Info(ctx, fmt.Sprintf("Destroying gitops module: name=%s, namespace=%s, serverName=%s", name, namespace, serverName))
+
+	var args = []string{
+	  "gitops-module",
+	  name,
+	  "--delete",
+	  "-n", namespace,
+	  "--contentDir", contentDir,
+	  "--branch", branch,
+	  "--serverName", serverName,
+	  "--layer", layer,
+      "--type", moduleType}
+
+    if len(lock) > 0 {
+      args = append(args, "--lock", lock)
+    }
+    if len(valueFiles) > 0 {
+      args = append(args, "--valueFiles", valueFiles)
+    }
+    if len(caCert) > 0 {
+      args = append(args, "--caCert", caCert)
+    }
+    if len(debug) > 0 {
+      args = append(args, "--debug", debug)
+    }
+
+	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
+
+    tflog.Debug(ctx, "Executing command: " + cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -252,8 +275,14 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
         }
     }
 
+    if err := cmd.Wait(); err != nil {
+        tflog.Error(ctx, "Error running command")
+        return diag.FromErr(err)
+    }
+
     if err := in.Err(); err != nil {
-        log.Printf("error: %s", err)
+        tflog.Error(ctx, "Error processing stream")
+        return diag.FromErr(err)
     }
 
 	d.SetId("")
