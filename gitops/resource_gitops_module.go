@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"os/exec"
+	"path/filepath"
 )
 
 func resourceGitopsModule() *schema.Resource {
@@ -98,7 +99,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	defer gitopsMutexKV.Unlock(username)
 
 	cmd := exec.Command(
-		binDir+"/igc",
+		filepath.Join(binDir, "igc"),
 		"gitops-module",
 		name,
 		"-n", namespace,
@@ -111,6 +112,8 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		"--valueFiles", valueFiles,
 		"--caCert", caCert,
 		"--debug", debug)
+
+    tflog.Debug(ctx, "Executing command: " + cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -146,8 +149,14 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
         }
     }
 
+    if err := cmd.Wait(); err != nil {
+        tflog.Error(ctx, "Error running command")
+        return diag.fromErr(err)
+    }
+
     if err := in.Err(); err != nil {
         tflog.Error(ctx, "Error processing stream")
+        return diag.fromErr(err)
     }
 
 	d.SetId(namespace + ":" + name + ":" + serverName + ":" + contentDir)
