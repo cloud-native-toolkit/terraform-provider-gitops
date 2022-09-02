@@ -81,21 +81,31 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	gitopsMutexKV.Lock(username)
 
-	tflog.Info(ctx, "Provisioning gitops namespace: name=%s, serverName=%s", name, serverName)
-
 	defer gitopsMutexKV.Unlock(username)
 
-	cmd := exec.Command(
-		filepath.Join(binDir, "igc"),
-		"gitops-namespace",
-		name,
-		"--contentDir", contentDir,
-		"--lock", lock,
-		"--branch", branch,
-		"--serverName", serverName,
-		"--valueFiles", valueFiles,
-		"--caCert", caCert,
-		"--debug", debug)
+	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops namespace: name=%s, serverName=%s", name, serverName))
+
+	var args = []string{
+	  "gitops-namespace",
+	  name,
+	  "--contentDir", contentDir,
+	  "--branch", branch,
+	  "--serverName", serverName}
+
+    if len(lock) > 0 {
+      args = append(args, "--lock", lock)
+    }
+    if len(valueFiles) > 0 {
+      args = append(args, "--valueFiles", valueFiles)
+    }
+    if len(caCert) > 0 {
+      args = append(args, "--caCert", caCert)
+    }
+    if len(debug) > 0 {
+      args = append(args, "--debug", debug)
+    }
+
+	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
 
     tflog.Debug(ctx, "Executing command: " + cmd.String())
 
@@ -168,8 +178,6 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
-	log.Printf("Deleting gitops namespace")
-
 	config := m.(*ProviderConfig)
 
 	binDir := config.BinDir
@@ -181,6 +189,7 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
+	contentDir := d.Get("content_dir").(string)
 	branch := d.Get("branch").(string)
 	valueFiles := d.Get("value_files").(string)
 	credentials := d.Get("credentials").(string)
@@ -188,21 +197,34 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	gitopsMutexKV.Lock(username)
 
-	tflog.Info(ctx, "Destroying gitops namespace: name=%s, serverName=%s", name, serverName)
-
 	defer gitopsMutexKV.Unlock(username)
 
-	cmd := exec.Command(
-		binDir+"/igc",
-		"gitops-namespace",
-		name,
-		"--delete",
-		"--lock", lock,
-		"--serverName", serverName,
-		"--branch", branch,
-		"--valueFiles", valueFiles,
-		"--caCert", caCert,
-		"--debug", debug)
+	tflog.Info(ctx, fmt.Sprintf("Destroying gitops namespace: name=%s, serverName=%s", name, serverName))
+
+	var args = []string{
+	  "gitops-namespace",
+	  name,
+	  "--delete",
+	  "--contentDir", contentDir,
+	  "--branch", branch,
+	  "--serverName", serverName}
+
+    if len(lock) > 0 {
+      args = append(args, "--lock", lock)
+    }
+    if len(valueFiles) > 0 {
+      args = append(args, "--valueFiles", valueFiles)
+    }
+    if len(caCert) > 0 {
+      args = append(args, "--caCert", caCert)
+    }
+    if len(debug) > 0 {
+      args = append(args, "--debug", debug)
+    }
+
+	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
+
+    tflog.Debug(ctx, "Executing command: " + cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -214,7 +236,6 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
-
 
     stdout, err := cmd.StdoutPipe()
     if err != nil {
@@ -237,8 +258,14 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
         }
     }
 
+    if err := cmd.Wait(); err != nil {
+        tflog.Error(ctx, "Error running command")
+        return diag.FromErr(err)
+    }
+
     if err := in.Err(); err != nil {
-        log.Printf("error: %s", err)
+        tflog.Error(ctx, "Error processing stream")
+        return diag.FromErr(err)
     }
 
 	d.SetId("")
