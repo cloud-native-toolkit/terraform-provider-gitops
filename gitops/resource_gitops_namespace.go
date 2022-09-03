@@ -260,7 +260,7 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 
     if err := cmd.Wait(); err != nil {
         tflog.Error(ctx, "Error running command")
-		stderr, err := cmd.StderrPipe()
+		stderr, err2 := cmd.StderrPipe()
 		errin := bufio.NewScanner(stderr)
 		for errin.Scan() {
 			tflog.Info(ctx, errin.Text())
