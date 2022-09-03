@@ -3,10 +3,6 @@ variable "git_host" {
   default = "github.com"
 }
 
-variable "git_type" {
-  default = "github"
-}
-
 variable "git_org" {
   default = "cloud-native-toolkit-test"
 }
