@@ -41,7 +41,8 @@ jobs:
       - name: Build
         run: |
           mkdir -p ~/.terraform.d/plugins/terraform.local/local/gitops/0.0.0/linux_amd64
-          go build -v ./... -o ~/.terraform.d/plugins/terraform.local/local/gitops/0.0.0/linux_amd64/terraform-provider-gitops_v0.0.0
+          go build -v ./... -o ~/.terraform.d/plugins/terraform.local/local/gitops/0.0.0/linux_amd64
+          ls ~/.terraform.d/plugins/terraform.local/local/gitops/0.0.0/linux_amd64
 
       - name: Set up terraform
         uses: hashicorp/setup-terraform@v2
