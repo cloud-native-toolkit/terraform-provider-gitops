@@ -26,3 +26,6 @@ description: |-
 - **lock** (String)
 - **token** (String, Sensitive)
 - **username** (String)
+- **ca_cert** (String)
+- **ca_cert_file (String)
+- **debug** (String)

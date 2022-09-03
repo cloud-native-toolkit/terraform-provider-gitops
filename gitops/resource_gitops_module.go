@@ -143,6 +143,11 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
         return diag.FromErr(err)
     }
 
+    stderr, err := cmd.StderrPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
+
     // start the command after having set up the pipe
     if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
@@ -150,6 +155,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 
     // read command's stdout line by line
     in := bufio.NewScanner(stdout)
+    inErr := bufio.NewScanner(stderr)
 
     for in.Scan() {
         if debug == "true" {
@@ -159,13 +165,17 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
         }
     }
 
+    for inErr.Scan() {
+        tflog.Error(ctx, inErr.Text())
+    }
+
     if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, "Error running command")
+        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 
     if err := in.Err(); err != nil {
-        tflog.Error(ctx, "Error processing stream")
+        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 
@@ -259,6 +269,11 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
         return diag.FromErr(err)
     }
 
+    stderr, err := cmd.StderrPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
+
     // start the command after having set up the pipe
     if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
@@ -266,6 +281,7 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 
     // read command's stdout line by line
     in := bufio.NewScanner(stdout)
+    inErr := bufio.NewScanner(stderr)
 
     for in.Scan() {
         if debug == "true" {
@@ -275,13 +291,17 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
         }
     }
 
+    for inErr.Scan() {
+        tflog.Error(ctx, inErr.Text())
+    }
+
     if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, "Error running command")
+        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 
     if err := in.Err(); err != nil {
-        tflog.Error(ctx, "Error processing stream")
+        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 

@@ -144,12 +144,12 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
     }
 
     if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, "Error running command")
+        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 
     if err := in.Err(); err != nil {
-        tflog.Error(ctx, "Error processing stream")
+        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 
@@ -259,7 +259,7 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
     }
 
     if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, "Error running command")
+        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
 		stderr, _ := cmd.StderrPipe()
 		errin := bufio.NewScanner(stderr)
 		for errin.Scan() {
@@ -269,7 +269,7 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
     }
 
     if err := in.Err(); err != nil {
-        tflog.Error(ctx, "Error processing stream")
+        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
         return diag.FromErr(err)
     }
 
