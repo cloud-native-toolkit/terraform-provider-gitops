@@ -28,11 +28,11 @@ validate_gitops_ns_content () {
 
 validate_gitops_content () {
   local NS="$1"
-  local GITOPS_LAYER="$2"
-  local GITOPS_SERVER_NAME="$3"
-  local GITOPS_TYPE="$4"
-  local GITOPS_COMPONENT_NAME="$5"
-  local PAYLOAD_FILE="${6:-values.yaml}"
+  local GITOPS_COMPONENT_NAME="$2"
+  local PAYLOAD_FILE="${3:-values.yaml}"
+  local GITOPS_LAYER="${4:-1-infrastructure}"
+  local GITOPS_TYPE="${5:-base}"
+  local GITOPS_SERVER_NAME="${6:-default}"
 
   echo "Validating: namespace=${NS}, layer=${GITOPS_LAYER}, server=${GITOPS_SERVER_NAME}, type=${GITOPS_TYPE}, component=${GITOPS_COMPONENT_NAME}"
 

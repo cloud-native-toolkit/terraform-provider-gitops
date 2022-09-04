@@ -9,6 +9,7 @@ module "gitops" {
   username = var.git_username
   gitops_namespace = var.gitops_namespace
   sealed_secrets_cert = module.cert.cert
+  strict = true
 }
 
 resource local_file git_repo {
