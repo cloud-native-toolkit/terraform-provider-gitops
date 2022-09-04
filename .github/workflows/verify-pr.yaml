@@ -43,8 +43,6 @@ jobs:
           OUTPUT_DIR="/tmp/terraform/providers/registry.terraform.io/cloud-native-toolkit/gitops"
           mkdir -p "${OUTPUT_DIR}"
           
-          terraform-provider-TYPE_VERSION_TARGET.zip
-          
           go build -o terraform-provider-gitops
           
           mkdir tmp
