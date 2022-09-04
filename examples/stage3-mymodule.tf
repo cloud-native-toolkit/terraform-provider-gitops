@@ -1,6 +1,6 @@
 
 module cntk_module {
-  source = "../gitops_module"
+  source = "gitops_module"
 
   name = "my-module"
   namespace = module.cntk_namespace.name
@@ -10,7 +10,7 @@ module cntk_module {
 }
 
 module another_module {
-  source = "../gitops_module"
+  source = "gitops_module"
 
   name = "another-module"
   namespace = module.cntk_namespace.name
