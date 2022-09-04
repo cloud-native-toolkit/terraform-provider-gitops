@@ -40,8 +40,8 @@ jobs:
 
       - name: Build
         run: |
-          OUTPUT_DIR="terraform.d/plugins/registry.terraform.io/cloud-native-toolkit/gitops"
           mkdir -p "${OUTPUT_DIR}"
+          OUTPUT_DIR=$(cd terraform.d/plugins/registry.terraform.io/cloud-native-toolkit/gitops; pwd -P)
           
           go build -o terraform-provider-gitops
           
