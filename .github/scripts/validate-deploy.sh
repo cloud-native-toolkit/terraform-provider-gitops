@@ -11,6 +11,8 @@ export PATH="${BIN_DIR}:${PATH}"
 
 source "${SCRIPT_DIR}/validation-functions.sh"
 
+NAMESPACE=$(cat .namespace)
+
 mkdir -p .testrepo
 
 git clone "https://${GIT_TOKEN}@${GIT_REPO}" .testrepo
