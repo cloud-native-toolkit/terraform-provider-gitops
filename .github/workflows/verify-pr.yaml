@@ -59,7 +59,7 @@ jobs:
           terraform apply -auto-approve
           
           echo "***"
-          echo "*** Validating terraform apply ***
+          echo "*** Validating terraform apply ***"
           echo "***"
           ../.github/scripts/validate-deploy.sh
 
