@@ -40,8 +40,8 @@ jobs:
 
       - name: Build
         run: |
-          mkdir -p "terraform.d/plugins/registry.terraform.io/cloud-native-toolkit/gitops"
-          OUTPUT_DIR=$(cd terraform.d/plugins/registry.terraform.io/cloud-native-toolkit/gitops; pwd -P)
+          OUTPUT_DIR="/tmp/terraform/providers/registry.terraform.io/cloud-native-toolkit/gitops"
+          mkdir -p "${OUTPUT_DIR}"
           
           go build -o terraform-provider-gitops
           
@@ -54,6 +54,20 @@ jobs:
           cd ..
           
           ls "${OUTPUT_DIR}"
+          
+          cat > local.tfrc << EOF
+          provider_installation {
+            filesystem_mirror {
+              path    = "/tmp/terraform/providers"
+              include = ["registry.terraform.io/cloud-native-toolkit/*"]
+            }
+            direct {
+              exclude = ["registry.terraform.io/cloud-native-toolkit/*"]
+            }
+          }
+          EOF
+          
+          export TF_CLI_CONFIG_FILE="${PWD}/local.tfrc"
 
       - name: Set up terraform cli
         uses: hashicorp/setup-terraform@v2
