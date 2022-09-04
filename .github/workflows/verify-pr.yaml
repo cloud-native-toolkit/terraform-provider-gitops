@@ -55,7 +55,7 @@ jobs:
           
           ls "${OUTPUT_DIR}"
           
-          cat > local.tfrc << EOF
+          cat > "${HOME}/.terraformrc" << EOF
           provider_installation {
             filesystem_mirror {
               path    = "/tmp/terraform/providers"
@@ -66,8 +66,6 @@ jobs:
             }
           }
           EOF
-          
-          export TF_CLI_CONFIG_FILE="${PWD}/local.tfrc"
 
       - name: Set up terraform cli
         uses: hashicorp/setup-terraform@v2
