@@ -11,12 +11,14 @@ module "gitops" {
   sealed_secrets_cert = module.cert.cert
 }
 
-resource null_resource gitops_output {
-  provisioner "local-exec" {
-    command = "echo -n '${module.gitops.config_repo}' > git_repo"
-  }
+resource local_file git_repo {
+  filename = "${path.cwd}/.git_repo"
 
-  provisioner "local-exec" {
-    command = "echo -n '${module.gitops.config_token}' > git_token"
-  }
+  content = module.gitops.config_repo
+}
+
+resource local_file git_token {
+  filename = "${path.cwd}/.git_token"
+
+  content = module.gitops.config_token
 }
