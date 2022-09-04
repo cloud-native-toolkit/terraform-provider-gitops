@@ -237,6 +237,8 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
+	cmd.Env = updatedEnv
+
     stdout, err := cmd.StdoutPipe()
     if err != nil {
         return diag.FromErr(err)

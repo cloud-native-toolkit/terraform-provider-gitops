@@ -66,3 +66,7 @@ terraform
 goreleaser
 git_token
 git_repo
+
+terraform.tfvars
+bin2/
+.terraform.lock.hcl
