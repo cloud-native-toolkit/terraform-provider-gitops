@@ -85,21 +85,33 @@ jobs:
           MESSAGE="Updates version to ${TAG_NAME}"
           echo "Message: $MESSAGE"
           echo "::set-output name=message::$MESSAGE"
+          
+          BRANCH_NAME="version-${TAG_NAME}"
+          echo "Branch: $BRANCH_NAME"
+          echo "::set-output name=branch_name::$BRANCH_NAME"
 
-      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v4
         with:
-          add: Makefile
-          author_name: GitHub Action
-          author_email: action@github.com
-          message: ${{ steps.update.outputs.message }}
+          title: ${{ steps.update.outputs.message }}
+          commit-message: ${{ steps.update.outputs.message }}
+          token: ${{ secrets.TOKEN }}
+          branch: ${{ steps.update.outputs.branch_name }}
+          delete-branch: true
+          labels: patch,chore
+          signoff: true
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+      - name: Enable Pull Request Automerge
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
 
       - name: Create tag
-        id: tag_version
+        if: steps.cpr.outputs.pull-request-operation != 'created'
         uses: mathieudutour/github-tag-action@v6.0
         with:
           custom_tag: ${{ steps.update.outputs.tag_name }}
