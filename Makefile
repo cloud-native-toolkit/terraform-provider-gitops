@@ -3,7 +3,7 @@ HOSTNAME=registry.terraform.io
 NAMESPACE=cloud-native-toolkit
 NAME=gitops
 BINARY=terraform-provider-${NAME}
-VERSION=0.2.9
+VERSION=0.2.10
 OS_ARCH=darwin_amd64
 
 default: install
