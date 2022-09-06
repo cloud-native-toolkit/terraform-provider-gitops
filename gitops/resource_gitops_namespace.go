@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -112,13 +113,15 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
 
-	updatedEnv := append(cmd.Env, "GIT_CREDENTIALS="+credentials)
+	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+credentials)
 	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
+
+	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", updatedEnv))
 
 	cmd.Env = updatedEnv
 
@@ -239,13 +242,15 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
 
-	updatedEnv := append(cmd.Env, "GIT_CREDENTIALS="+credentials)
+	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+credentials)
 	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
+
+	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", updatedEnv))
 
 	cmd.Env = updatedEnv
 
