@@ -1,20 +1,20 @@
 
-module cntk_module {
-  source = "./gitops_module"
+module sonarqube {
+  source = "github.com/cloud-native-toolkit/terraform-gitops-sonarqube.git?ref=v1.3.0"
 
-  name = "my-module"
-  namespace = module.cntk_namespace.name
-  server_name = module.gitops.server_name
-  config = module.gitops.gitops_config
-  credentials = module.gitops.git_credentials
+  namespace       = module.cntk_namespace.name
+  gitops_config   = module.gitops.gitops_config
+  git_credentials = module.gitops.git_credentials
+  kubeseal_cert   = module.gitops.sealed_secrets_cert
+  server_name     = module.gitops.server_name
 }
 
-module another_module {
-  source = "./gitops_module"
+module dashboard {
+  source = "github.com/cloud-native-toolkit/terraform-gitops-dashboard.git?ref=v1.7.0"
 
-  name = "another-module"
-  namespace = module.cntk_namespace.name
-  server_name = module.gitops.server_name
-  config = module.gitops.gitops_config
-  credentials = module.gitops.git_credentials
+  namespace       = module.cntk_namespace.name
+  gitops_config   = module.gitops.gitops_config
+  git_credentials = module.gitops.git_credentials
+  kubeseal_cert   = module.gitops.sealed_secrets_cert
+  server_name     = module.gitops.server_name
 }
