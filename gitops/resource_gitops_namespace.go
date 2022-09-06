@@ -112,7 +112,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
 
-	updatedEnv := append(cmd.Env, "GIT_CREDENTIALS="+credentials)
+	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+credentials)
 	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
@@ -239,7 +239,7 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
 
-	updatedEnv := append(cmd.Env, "GIT_CREDENTIALS="+credentials)
+	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+credentials)
 	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
