@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"fmt"
@@ -136,6 +137,8 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
+	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", updatedEnv))
+
 	cmd.Env = updatedEnv
 
     stdout, err := cmd.StdoutPipe()
@@ -263,6 +266,8 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
+
+	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", updatedEnv))
 
 	cmd.Env = updatedEnv
 
