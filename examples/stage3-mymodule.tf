@@ -15,6 +15,5 @@ module dashboard {
   namespace       = module.cntk_namespace.name
   gitops_config   = module.gitops.gitops_config
   git_credentials = module.gitops.git_credentials
-  kubeseal_cert   = module.gitops.sealed_secrets_cert
   server_name     = module.gitops.server_name
 }
