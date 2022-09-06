@@ -127,6 +127,11 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
         return diag.FromErr(err)
     }
 
+    stderr, err := cmd.StderrPipe()
+    if err != nil {
+        return diag.FromErr(err)
+    }
+
     // start the command after having set up the pipe
     if err := cmd.Start(); err != nil {
 		return diag.FromErr(err)
@@ -134,6 +139,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
     // read command's stdout line by line
     in := bufio.NewScanner(stdout)
+    inErr := bufio.NewScanner(stderr)
 
     for in.Scan() {
         if debug == "true" {
@@ -141,6 +147,10 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
         } else {
           tflog.Info(ctx, in.Text())
         }
+    }
+
+    for inErr.Scan() {
+        tflog.Error(ctx, inErr.Text())
     }
 
     if err := cmd.Wait(); err != nil {
