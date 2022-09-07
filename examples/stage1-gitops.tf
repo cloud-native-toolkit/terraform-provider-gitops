@@ -1,9 +1,20 @@
+resource random_string suffix {
+  length = 6
+
+  upper = false
+  special = false
+}
+
+locals {
+  repo_name = "${var.git_repo}-${random_string.suffix.result}"
+}
+
 module "gitops" {
   source = "github.com/cloud-native-toolkit/terraform-tools-gitops"
 
   host = var.git_host
   org  = var.git_org
-  repo = var.git_repo
+  repo = local.repo_name
   token = var.git_token
   public = true
   username = var.git_username

@@ -24,8 +24,8 @@ find . -name "*"
 set -e
 
 validate_gitops_ns_content "${NAMESPACE}" "${SERVER_NAME}"
-validate_gitops_content "${NAMESPACE}" "my-module" "mymodule.yaml"
-validate_gitops_content "${NAMESPACE}" "another-module" "mymodule.yaml"
+validate_gitops_content "${NAMESPACE}" "sonarqube" "values.yaml" "2-services"
+validate_gitops_content "${NAMESPACE}" "dashboard" "values.yaml" "2-services"
 
 cd ..
 rm -rf .testrepo
