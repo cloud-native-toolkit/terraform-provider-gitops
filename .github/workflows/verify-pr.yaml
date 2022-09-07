@@ -28,8 +28,9 @@ jobs:
   verifyDeploy:
     needs: verify
     runs-on: ubuntu-latest
-    container: quay.io/cloudnativetoolkit/cli-tools-core:v1.2
-
+    container:
+      image: quay.io/cloudnativetoolkit/cli-tools-core:v1.2
+      options: --user root
     steps:
       - name: Checkout
         uses: actions/checkout@v3
