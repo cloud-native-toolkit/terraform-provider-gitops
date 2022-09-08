@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,11 +45,13 @@ func resourceGitopsModule() *schema.Resource {
 			"layer": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{"infrastructure", "services", "applications"}, false),
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "base",
+				ValidateFunc: validation.StringInSlice([]string{"base", "instances", "operators"}, false),
 			},
 			"value_files": &schema.Schema{
 				Type:     schema.TypeString,
