@@ -136,7 +136,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
         "--helmChart", helmChart,
         "--helmChartVersion", helmChartVersion)
     } else {
-        return diag.fromErr(errors.New("contentDir or helmRepoUrl, helmChart, and helmChartVersion are required"))
+        return diag.FromErr(errors.New("contentDir or helmRepoUrl, helmChart, and helmChartVersion are required"))
     }
 
     if len(lock) > 0 {
