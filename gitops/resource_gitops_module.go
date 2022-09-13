@@ -30,7 +30,19 @@ func resourceGitopsModule() *schema.Resource {
 			},
 			"content_dir": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Required: false,
+			},
+			"helm_repo_url": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: false,
+			},
+			"helm_chart": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: false,
+			},
+			"helm_chart_version": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: false,
 			},
 			"server_name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -88,6 +100,10 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
+	helmRepoUrl := d.Get("helm_repo_url").(string)
+	helmChart := d.Get("helm_chart").(string)
+	helmChartVersion := d.Get("helm_chart_version").(string)
+
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
@@ -106,11 +122,21 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	  "gitops-module",
 	  name,
 	  "-n", namespace,
-	  "--contentDir", contentDir,
 	  "--branch", branch,
 	  "--serverName", serverName,
 	  "--layer", layer,
       "--type", moduleType}
+
+    if len(contentDir) > 0 {
+      args = append(args, "--contentDir", contentDir)
+    } else if len(helmRepoUrl) > 0 && len(helmChart) > 0 && len(helmChartVersion) > 0 {
+      args = append(args,
+        "--helmRepoUrl", helmRepoUrl,
+        "--helmChart", helmChart,
+        "--helmChartVersion", helmChartVersion)
+    } else {
+        return diag.fromErr(new Error("contentDir or helmRepoUrl, helmChart, and helmChartVersion are required"))
+    }
 
     if len(lock) > 0 {
       args = append(args, "--lock", lock)

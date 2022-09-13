@@ -26,12 +26,32 @@ func resourceGitopsNamespace() *schema.Resource {
 			},
 			"content_dir": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Required: false,
 			},
 			"server_name": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "default",
+			},
+			"create_operator_group": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "true",
+			},
+			"argocd_namespace": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "openshift-gitops",
+			},
+			"dev_namespace": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "false",
+			},
+			"tmp_dir": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ".tmp/namespace",
 			},
 			"branch": &schema.Schema{
 				Type:     schema.TypeString,
@@ -72,6 +92,11 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
+	createOperatorGroup := d.Get("create_operator_group").(string)
+	argocdNamespace := d.Get("argocd_namespace").(string)
+	devNamespace := d.Get("dev_namespace").(string)
+	tmpDir := d.Get("tmp_dir").(string)
+
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
@@ -89,9 +114,19 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	var args = []string{
 	  "gitops-namespace",
 	  name,
-	  "--contentDir", contentDir,
 	  "--branch", branch,
 	  "--serverName", serverName}
+
+    if len(contentDir) > 0 {
+      args = append(args, "--contentDir", contentDir)
+    } else {
+      args = append(args,
+        "--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
+        "--helmChart", "namespace",
+        "--helmChartVersion", "0.1.0")
+
+        // TODO write values file to tmp_dir and update valueFiles variable with the path
+    }
 
     if len(lock) > 0 {
       args = append(args, "--lock", lock)
