@@ -31,19 +31,23 @@ func resourceGitopsModule() *schema.Resource {
 			},
 			"content_dir": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
+				Default:  "",
 			},
 			"helm_repo_url": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
+				Default:  "",
 			},
 			"helm_chart": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
+				Default:  "",
 			},
 			"helm_chart_version": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
+				Default:  "",
 			},
 			"server_name": &schema.Schema{
 				Type:     schema.TypeString,
