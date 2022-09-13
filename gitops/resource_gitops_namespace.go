@@ -92,10 +92,10 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
-	createOperatorGroup := d.Get("create_operator_group").(string)
-	argocdNamespace := d.Get("argocd_namespace").(string)
-	devNamespace := d.Get("dev_namespace").(string)
-	tmpDir := d.Get("tmp_dir").(string)
+// 	createOperatorGroup := d.Get("create_operator_group").(string)
+// 	argocdNamespace := d.Get("argocd_namespace").(string)
+// 	devNamespace := d.Get("dev_namespace").(string)
+// 	tmpDir := d.Get("tmp_dir").(string)
 
 	binDir := config.BinDir
 	lock := config.Lock
