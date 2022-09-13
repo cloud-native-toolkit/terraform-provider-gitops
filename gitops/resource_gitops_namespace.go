@@ -27,7 +27,7 @@ func resourceGitopsNamespace() *schema.Resource {
 			"content_dir": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  ""
+				Default:  "",
 			},
 			"server_name": &schema.Schema{
 				Type:     schema.TypeString,
