@@ -35,9 +35,9 @@ func resourceGitopsNamespace() *schema.Resource {
 				Default:  "default",
 			},
 			"create_operator_group": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  "true",
+				Default:  true,
 			},
 			"argocd_namespace": &schema.Schema{
 				Type:     schema.TypeString,
@@ -45,9 +45,9 @@ func resourceGitopsNamespace() *schema.Resource {
 				Default:  "openshift-gitops",
 			},
 			"dev_namespace": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  "false",
+				Default:  false,
 			},
 			"tmp_dir": &schema.Schema{
 				Type:     schema.TypeString,
