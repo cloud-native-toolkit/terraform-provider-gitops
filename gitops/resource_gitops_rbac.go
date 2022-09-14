@@ -83,7 +83,7 @@ func resourceGitopsRBAC() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"apiGroups": {
+						"api_groups": {
 							Type:        schema.TypeList,
 							Computed:    true,
 							Description: "The apiGroups for the resources in the rule",
@@ -95,7 +95,7 @@ func resourceGitopsRBAC() *schema.Resource {
 							Description: "The resources targeted by the rule",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
-						"resourceNames": {
+						"resource_names": {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Description: "The names of the resources targeted by the rule",
