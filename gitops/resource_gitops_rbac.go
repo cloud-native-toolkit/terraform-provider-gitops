@@ -81,7 +81,6 @@ func resourceGitopsRBAC() *schema.Resource {
 			"rules": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
-				Default:  []RBACRule{},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"apiGroups": {
@@ -115,7 +114,6 @@ func resourceGitopsRBAC() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "The list of cluster roles that should be applied to the service account",
-				Default:     []RBACRole{},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
