@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"os/exec"
@@ -77,6 +78,21 @@ func resourceGitopsNamespace() *schema.Resource {
 	}
 }
 
+type GitopsConfigValues struct {
+	Create              bool   `yaml:"create"`
+	ApplicationBasePath string `yaml:"applicationBasePath"`
+	Host                string `yaml:"host"`
+	Org                 string `yaml:"org"`
+	Repo                string `yaml:"repo"`
+	Branch              string `yaml:"branch"`
+}
+
+type NamespaceValues struct {
+	CreateOperatorGroup bool               `yaml:"createOperatorGroup"`
+	ArgocdNamespace     string             `yaml:"argocdNamespace"`
+	GitopsConfig        GitopsConfigValues `yaml:"gitopsConfig"`
+}
+
 func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
@@ -93,10 +109,26 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
 
-// 	createOperatorGroup := d.Get("create_operator_group").(string)
-// 	argocdNamespace := d.Get("argocd_namespace").(string)
-// 	devNamespace := d.Get("dev_namespace").(string)
-// 	tmpDir := d.Get("tmp_dir").(string)
+	createOperatorGroup := d.Get("create_operator_group").(bool)
+	argocdNamespace := d.Get("argocd_namespace").(string)
+	//devNamespace := d.Get("dev_namespace").(bool)
+	tmpDir := d.Get("tmp_dir").(string)
+
+	namespaceValues := NamespaceValues{
+		CreateOperatorGroup: createOperatorGroup,
+		ArgocdNamespace:     argocdNamespace,
+		GitopsConfig: GitopsConfigValues{
+			Create: false,
+		},
+	}
+
+	valueData, err := yaml.Marshal(&namespaceValues)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	valuesPath := fmt.Sprintf("%s/namespace/%s", tmpDir, name)
+	valuesFile := fmt.Sprintf("%s/values.yaml", valuesPath)
 
 	binDir := config.BinDir
 	lock := config.Lock
@@ -112,39 +144,48 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops namespace: name=%s, serverName=%s", name, serverName))
 
+	err = os.Mkdir(valuesPath, os.ModePerm)
+	if err != nil {
+		diag.FromErr(err)
+	}
+	err = os.WriteFile(valuesFile, valueData, 0644)
+	if err != nil {
+		diag.FromErr(err)
+	}
+
 	var args = []string{
-	  "gitops-namespace",
-	  name,
-	  "--branch", branch,
-	  "--serverName", serverName}
+		"gitops-namespace",
+		name,
+		"--branch", branch,
+		"--serverName", serverName}
 
-    if len(contentDir) > 0 {
-      args = append(args, "--contentDir", contentDir)
-    } else {
-      args = append(args,
-        "--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
-        "--helmChart", "namespace",
-        "--helmChartVersion", "0.1.0")
+	if len(contentDir) > 0 {
+		args = append(args, "--contentDir", contentDir)
 
-        // TODO write values file to tmp_dir and update valueFiles variable with the path
-    }
+		if len(valueFiles) > 0 {
+			args = append(args, "--valueFiles", valueFiles)
+		}
+	} else {
+		args = append(args,
+			"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
+			"--helmChart", "namespace",
+			"--helmChartVersion", "0.1.0",
+			"--valueFiles", valuesFile)
+	}
 
-    if len(lock) > 0 {
-      args = append(args, "--lock", lock)
-    }
-    if len(valueFiles) > 0 {
-      args = append(args, "--valueFiles", valueFiles)
-    }
-    if len(caCert) > 0 {
-      args = append(args, "--caCert", caCert)
-    }
-    if len(debug) > 0 {
-      args = append(args, "--debug", debug)
-    }
+	if len(lock) > 0 {
+		args = append(args, "--lock", lock)
+	}
+	if len(caCert) > 0 {
+		args = append(args, "--caCert", caCert)
+	}
+	if len(debug) > 0 {
+		args = append(args, "--debug", debug)
+	}
 
 	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
 
-    tflog.Debug(ctx, "Executing command: " + cmd.String())
+	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -161,46 +202,46 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	cmd.Env = updatedEnv
 
-    stdout, err := cmd.StdoutPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
-
-    stderr, err := cmd.StderrPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
-
-    // start the command after having set up the pipe
-    if err := cmd.Start(); err != nil {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
 		return diag.FromErr(err)
-    }
+	}
 
-    // read command's stdout line by line
-    in := bufio.NewScanner(stdout)
-    inErr := bufio.NewScanner(stderr)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-    for in.Scan() {
-        if debug == "true" {
-          tflog.Debug(ctx, in.Text())
-        } else {
-          tflog.Info(ctx, in.Text())
-        }
-    }
+	// start the command after having set up the pipe
+	if err := cmd.Start(); err != nil {
+		return diag.FromErr(err)
+	}
 
-    for inErr.Scan() {
-        tflog.Error(ctx, inErr.Text())
-    }
+	// read command's stdout line by line
+	in := bufio.NewScanner(stdout)
+	inErr := bufio.NewScanner(stderr)
 
-    if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
+	for in.Scan() {
+		if debug == "true" {
+			tflog.Debug(ctx, in.Text())
+		} else {
+			tflog.Info(ctx, in.Text())
+		}
+	}
 
-    if err := in.Err(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
+	for inErr.Scan() {
+		tflog.Error(ctx, inErr.Text())
+	}
+
+	if err := cmd.Wait(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
+		return diag.FromErr(err)
+	}
+
+	if err := in.Err(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
+		return diag.FromErr(err)
+	}
 
 	d.SetId(name + ":" + serverName + ":" + contentDir)
 
@@ -251,29 +292,29 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	tflog.Info(ctx, fmt.Sprintf("Destroying gitops namespace: name=%s, serverName=%s", name, serverName))
 
 	var args = []string{
-	  "gitops-namespace",
-	  name,
-	  "--delete",
-	  "--contentDir", contentDir,
-	  "--branch", branch,
-	  "--serverName", serverName}
+		"gitops-namespace",
+		name,
+		"--delete",
+		"--contentDir", contentDir,
+		"--branch", branch,
+		"--serverName", serverName}
 
-    if len(lock) > 0 {
-      args = append(args, "--lock", lock)
-    }
-    if len(valueFiles) > 0 {
-      args = append(args, "--valueFiles", valueFiles)
-    }
-    if len(caCert) > 0 {
-      args = append(args, "--caCert", caCert)
-    }
-    if len(debug) > 0 {
-      args = append(args, "--debug", debug)
-    }
+	if len(lock) > 0 {
+		args = append(args, "--lock", lock)
+	}
+	if len(valueFiles) > 0 {
+		args = append(args, "--valueFiles", valueFiles)
+	}
+	if len(caCert) > 0 {
+		args = append(args, "--caCert", caCert)
+	}
+	if len(debug) > 0 {
+		args = append(args, "--debug", debug)
+	}
 
 	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
 
-    tflog.Debug(ctx, "Executing command: " + cmd.String())
+	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
@@ -290,46 +331,46 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	cmd.Env = updatedEnv
 
-    stdout, err := cmd.StdoutPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
-
-    stderr, err := cmd.StderrPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
-
-    // start the command after having set up the pipe
-    if err := cmd.Start(); err != nil {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
 		return diag.FromErr(err)
-    }
+	}
 
-    // read command's stdout line by line
-    in := bufio.NewScanner(stdout)
-    inErr := bufio.NewScanner(stderr)
-
-    for in.Scan() {
-        if debug == "true" {
-          tflog.Debug(ctx, in.Text())
-        } else {
-          tflog.Info(ctx, in.Text())
-        }
-    }
-
-    for inErr.Scan() {
-        tflog.Error(ctx, inErr.Text())
-    }
-
-    if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
 		return diag.FromErr(err)
-    }
+	}
 
-    if err := in.Err(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
+	// start the command after having set up the pipe
+	if err := cmd.Start(); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// read command's stdout line by line
+	in := bufio.NewScanner(stdout)
+	inErr := bufio.NewScanner(stderr)
+
+	for in.Scan() {
+		if debug == "true" {
+			tflog.Debug(ctx, in.Text())
+		} else {
+			tflog.Info(ctx, in.Text())
+		}
+	}
+
+	for inErr.Scan() {
+		tflog.Error(ctx, inErr.Text())
+	}
+
+	if err := cmd.Wait(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
+		return diag.FromErr(err)
+	}
+
+	if err := in.Err(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
+		return diag.FromErr(err)
+	}
 
 	d.SetId("")
 
