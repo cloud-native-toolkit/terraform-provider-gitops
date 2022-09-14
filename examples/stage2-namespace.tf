@@ -1,5 +1,5 @@
 
-module test_namespace {
+module cntk_namespace {
   source = "./provider-resources"
 
   namespace       = "provider-test"
@@ -11,5 +11,5 @@ module test_namespace {
 resource local_file namespace {
   filename = "${path.cwd}/.namespace"
 
-  content = module.test_namespace.name
+  content = module.cntk_namespace.name
 }
