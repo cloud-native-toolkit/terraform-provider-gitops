@@ -128,8 +128,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	valuesPath := fmt.Sprintf("%s/namespace/%s", tmpDir, name)
-	valuesFileName := "values.yaml"
-	valuesFile := fmt.Sprintf("%s/%s", valuesPath, valuesFileName)
+	valuesFile := fmt.Sprintf("%s/values.yaml", valuesPath)
 
 	binDir := config.BinDir
 	lock := config.Lock
@@ -170,7 +169,8 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		args = append(args,
 			"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 			"--helmChart", "namespace",
-			"--helmChartVersion", "0.1.0")
+			"--helmChartVersion", "0.1.0",
+			"--valueFiles", valuesFile)
 	}
 
 	if len(lock) > 0 {

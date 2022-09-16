@@ -220,8 +220,7 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 		scope = namespace
 	}
 	valuesPath := fmt.Sprintf("%s/%s/%s", tmpDir, scope, name)
-	valuesFileName := "values.yaml"
-	valuesFile := fmt.Sprintf("%s/%s", valuesPath, valuesFileName)
+	valuesFile := fmt.Sprintf("%s/values.yaml", valuesPath)
 
 	binDir := config.BinDir
 	lock := config.Lock
@@ -256,7 +255,8 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 		"--type", moduleType,
 		"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 		"--helmChart", "rbac",
-		"--helmChartVersion", "0.2.0"}
+		"--helmChartVersion", "0.2.0",
+		"--valueFiles", valuesFile}
 
 	if len(lock) > 0 {
 		args = append(args, "--lock", lock)
