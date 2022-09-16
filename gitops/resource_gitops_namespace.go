@@ -146,11 +146,11 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	err = os.Mkdir(valuesPath, os.ModePerm)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 	err = os.WriteFile(valuesFile, valueData, 0644)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	var args = []string{

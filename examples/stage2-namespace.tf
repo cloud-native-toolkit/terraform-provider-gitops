@@ -13,3 +13,4 @@ resource local_file namespace {
 
   content = module.cntk_namespace.name
 }
+git
