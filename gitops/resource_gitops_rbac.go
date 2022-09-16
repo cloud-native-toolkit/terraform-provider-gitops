@@ -228,13 +228,11 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 		"--branch", branch,
 		"--serverName", serverName,
 		"--layer", layer,
-		"--type", moduleType}
-
-	args = append(args,
+		"--type", moduleType,
 		"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 		"--helmChart", "rbac",
 		"--helmChartVersion", "0.2.0",
-		"--valueFiles", valuesFile)
+		"--valueFiles", valuesFile}
 
 	if len(lock) > 0 {
 		args = append(args, "--lock", lock)
@@ -336,7 +334,6 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
-	contentDir := d.Get("content_dir").(string)
 	serverName := d.Get("server_name").(string)
 	layer := d.Get("layer").(string)
 	branch := d.Get("branch").(string)
@@ -358,7 +355,6 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 		name,
 		"--delete",
 		"-n", namespace,
-		"--contentDir", contentDir,
 		"--branch", branch,
 		"--serverName", serverName,
 		"--layer", layer,
@@ -485,7 +481,11 @@ func interfacesToString(list []interface{}) []string {
 
 	result := make([]string, len(list))
 	for i, item := range list {
-		result[i] = fmt.Sprintf("%s", item)
+		if item == nil {
+			result[i] = ""
+		} else {
+			result[i] = item.(string)
+		}
 	}
 
 	return result
