@@ -256,8 +256,7 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 		"--type", moduleType,
 		"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 		"--helmChart", "rbac",
-		"--helmChartVersion", "0.2.0",
-		"--valueFiles", valuesFileName}
+		"--helmChartVersion", "0.2.0"}
 
 	if len(lock) > 0 {
 		args = append(args, "--lock", lock)

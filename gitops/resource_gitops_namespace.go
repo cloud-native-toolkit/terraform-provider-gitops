@@ -170,8 +170,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		args = append(args,
 			"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 			"--helmChart", "namespace",
-			"--helmChartVersion", "0.1.0",
-			"--valueFiles", valuesFileName)
+			"--helmChartVersion", "0.1.0")
 	}
 
 	if len(lock) > 0 {
