@@ -168,8 +168,33 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	tmpDir := d.Get("tmp_dir").(string)
 	clusterScope := d.Get("cluster_scope").(bool)
-	rules := d.Get("roles").([]RBACRule)
-	roles := d.Get("roles").([]RBACRole)
+	rawRules := d.Get("roles").([]interface{})
+	rawRoles := d.Get("roles").([]interface{})
+
+	rules := []RBACRule{}
+	for _, item := range rawRules {
+		i := item.(map[string]interface{})
+
+		rule := RBACRule{
+			ApiGroups:     i["api_groups"].([]string),
+			Resources:     i["resources"].([]string),
+			ResourceNames: i["resource_names"].([]string),
+			Verbs:         i["verbs"].([]string),
+		}
+
+		rules = append(rules, rule)
+	}
+
+	roles := []RBACRole{}
+	for _, item := range rawRoles {
+		i := item.(map[string]interface{})
+
+		role := RBACRole{
+			Name: i["name"].(string),
+		}
+
+		roles = append(roles, role)
+	}
 
 	serviceAccountName := d.Get("service_account_name").(string)
 	serviceAccountNamespace := d.Get("service_account_namespace").(string)
@@ -319,6 +344,7 @@ func resourceGitopsRBACRead(ctx context.Context, d *schema.ResourceData, m inter
 }
 
 func resourceGitopsRBACUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// TODO implement update...
 	return resourceGitopsModuleRead(ctx, d, m)
 }
 
