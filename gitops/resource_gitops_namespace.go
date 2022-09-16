@@ -128,7 +128,8 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	valuesPath := fmt.Sprintf("%s/namespace/%s", tmpDir, name)
-	valuesFile := fmt.Sprintf("%s/values.yaml", valuesPath)
+	valuesFileName := "values.yaml"
+	valuesFile := fmt.Sprintf("%s/%s", valuesPath, valuesFileName)
 
 	binDir := config.BinDir
 	lock := config.Lock
@@ -144,15 +145,6 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops namespace: name=%s, serverName=%s", name, serverName))
 
-	err = os.MkdirAll(valuesPath, os.ModePerm)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = os.WriteFile(valuesFile, valueData, 0644)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	var args = []string{
 		"gitops-namespace",
 		name,
@@ -166,11 +158,20 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 			args = append(args, "--valueFiles", valueFiles)
 		}
 	} else {
+		err = os.MkdirAll(valuesPath, os.ModePerm)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = os.WriteFile(valuesFile, valueData, 0644)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		args = append(args,
 			"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 			"--helmChart", "namespace",
 			"--helmChartVersion", "0.1.0",
-			"--valueFiles", valuesFile)
+			"--valueFiles", valuesFileName)
 	}
 
 	if len(lock) > 0 {
