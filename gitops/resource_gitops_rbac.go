@@ -485,7 +485,7 @@ func interfacesToString(list []interface{}) []string {
 
 	result := make([]string, len(list))
 	for i, item := range list {
-		result[i] = item.(string)
+		result[i] = fmt.Sprintf("%s", item)
 	}
 
 	return result
