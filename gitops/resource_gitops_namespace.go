@@ -145,6 +145,15 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops namespace: name=%s, serverName=%s", name, serverName))
 
+	err = os.MkdirAll(valuesPath, os.ModePerm)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = os.WriteFile(valuesFile, valueData, 0644)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	var args = []string{
 		"gitops-namespace",
 		name,
@@ -158,15 +167,6 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 			args = append(args, "--valueFiles", valueFiles)
 		}
 	} else {
-		err = os.MkdirAll(valuesPath, os.ModePerm)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		err = os.WriteFile(valuesFile, valueData, 0644)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
 		args = append(args,
 			"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
 			"--helmChart", "namespace",
