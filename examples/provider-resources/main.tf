@@ -28,7 +28,7 @@ resource gitops_rbac test {
     name = "cluster-admin"
   }
   rules {
-    apiGroup = [""]
+    api_groups = [""]
     resources = ["configmaps"]
     verbs = [""]
   }
