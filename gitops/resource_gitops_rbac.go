@@ -85,13 +85,13 @@ func resourceGitopsRBAC() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"api_groups": {
 							Type:        schema.TypeList,
-							Computed:    true,
+							Required:    true,
 							Description: "The apiGroups for the resources in the rule",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"resources": {
 							Type:        schema.TypeList,
-							Computed:    true,
+							Required:    true,
 							Description: "The resources targeted by the rule",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
@@ -103,7 +103,7 @@ func resourceGitopsRBAC() *schema.Resource {
 						},
 						"verbs": {
 							Type:        schema.TypeList,
-							Computed:    true,
+							Required:    true,
 							Description: "The verbs or actions that can be performed on the resources",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
@@ -118,7 +118,7 @@ func resourceGitopsRBAC() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
-							Computed:    true,
+							Required:    true,
 							Description: "The name of the cluster role that will be applied",
 						},
 					},
@@ -168,7 +168,7 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	tmpDir := d.Get("tmp_dir").(string)
 	clusterScope := d.Get("cluster_scope").(bool)
-	rawRules := d.Get("roles").([]interface{})
+	rawRules := d.Get("rules").([]interface{})
 	rawRoles := d.Get("roles").([]interface{})
 
 	rules := []RBACRule{}
