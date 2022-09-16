@@ -136,7 +136,7 @@ type RBACServiceAccount struct {
 type RBACRule struct {
 	ApiGroups     []string `yaml:"apiGroups"`
 	Resources     []string `yaml:"resources"`
-	ResourceNames []string `yaml:"resourceNames"`
+	ResourceNames []string `yaml:"resourceNames,omitempty"`
 	Verbs         []string `yaml:"verbs"`
 }
 
@@ -479,9 +479,13 @@ func getRBACRoles(d *schema.ResourceData, name string) []RBACRole {
 }
 
 func interfacesToString(list []interface{}) []string {
+	if list == nil {
+		return nil
+	}
+
 	result := make([]string, len(list))
 	for i, item := range list {
-		result[i] = fmt.Sprint(item)
+		result[i] = item.(string)
 	}
 
 	return result
