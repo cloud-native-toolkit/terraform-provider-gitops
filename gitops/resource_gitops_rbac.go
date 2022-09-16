@@ -151,18 +151,42 @@ type RBACValues struct {
 	Rules          []RBACRule         `yaml:"rules"`
 }
 
+func getNameInput(d *schema.ResourceData) string {
+	return d.Get("name").(string)
+}
+
+func getNamespaceInput(d *schema.ResourceData) string {
+	return d.Get("namespace").(string)
+}
+
+func getServerNameInput(d *schema.ResourceData) string {
+	return d.Get("server_name").(string)
+}
+
+func getBranchInput(d *schema.ResourceData) string {
+	return d.Get("branch").(string)
+}
+
+func getCredentialsInput(d *schema.ResourceData) string {
+	return d.Get("credentials").(string)
+}
+
+func getGitopsConfigInput(d *schema.ResourceData) string {
+	return d.Get("config").(string)
+}
+
 func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
 	config := m.(*ProviderConfig)
 
-	name := d.Get("name").(string)
-	namespace := d.Get("namespace").(string)
-	serverName := d.Get("server_name").(string)
-	branch := d.Get("branch").(string)
-	credentials := d.Get("credentials").(string)
-	gitopsConfig := d.Get("config").(string)
+	name := getNameInput(d)
+	namespace := getNamespaceInput(d)
+	serverName := getServerNameInput(d)
+	branch := getBranchInput(d)
+	credentials := getCredentialsInput(d)
+	gitopsConfig := getGitopsConfigInput(d)
 	layer := "infrastructure"
 	moduleType := "base"
 
@@ -332,13 +356,12 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 	debug := config.Debug
 	caCert := config.CaCertFile
 
-	name := d.Get("name").(string)
-	namespace := d.Get("namespace").(string)
-	serverName := d.Get("server_name").(string)
-	branch := d.Get("branch").(string)
-	valueFiles := d.Get("value_files").(string)
-	credentials := d.Get("credentials").(string)
-	gitopsConfig := d.Get("config").(string)
+	name := getNameInput(d)
+	namespace := getNamespaceInput(d)
+	serverName := getServerNameInput(d)
+	branch := getBranchInput(d)
+	credentials := getCredentialsInput(d)
+	gitopsConfig := getGitopsConfigInput(d)
 	layer := "infrastructure"
 	moduleType := "base"
 
@@ -365,9 +388,6 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	if len(lock) > 0 {
 		args = append(args, "--lock", lock)
-	}
-	if len(valueFiles) > 0 {
-		args = append(args, "--valueFiles", valueFiles)
 	}
 	if len(caCert) > 0 {
 		args = append(args, "--caCert", caCert)
