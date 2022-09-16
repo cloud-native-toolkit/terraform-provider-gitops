@@ -168,33 +168,8 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	tmpDir := d.Get("tmp_dir").(string)
 	clusterScope := d.Get("cluster_scope").(bool)
-	rawRules := d.Get("rules").([]interface{})
-	rawRoles := d.Get("roles").([]interface{})
-
-	rules := []RBACRule{}
-	for _, item := range rawRules {
-		i := item.(map[string]interface{})
-
-		rule := RBACRule{
-			ApiGroups:     i["api_groups"].([]string),
-			Resources:     i["resources"].([]string),
-			ResourceNames: i["resource_names"].([]string),
-			Verbs:         i["verbs"].([]string),
-		}
-
-		rules = append(rules, rule)
-	}
-
-	roles := []RBACRole{}
-	for _, item := range rawRoles {
-		i := item.(map[string]interface{})
-
-		role := RBACRole{
-			Name: i["name"].(string),
-		}
-
-		roles = append(roles, role)
-	}
+	rules := getRBACRules(d, "rules")
+	roles := getRBACRoles(d, "roles")
 
 	serviceAccountName := d.Get("service_account_name").(string)
 	serviceAccountNamespace := d.Get("service_account_namespace").(string)
@@ -465,4 +440,49 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 	d.SetId("")
 
 	return diags
+}
+
+func getRBACRules(d *schema.ResourceData, name string) []RBACRule {
+	rawRules := d.Get(name).([]interface{})
+
+	rules := []RBACRule{}
+	for _, item := range rawRules {
+		i := item.(map[string]interface{})
+
+		rule := RBACRule{
+			ApiGroups:     interfacesToString(i["api_groups"].([]interface{})),
+			Resources:     interfacesToString(i["resources"].([]interface{})),
+			ResourceNames: interfacesToString(i["resource_names"].([]interface{})),
+			Verbs:         interfacesToString(i["verbs"].([]interface{})),
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func getRBACRoles(d *schema.ResourceData, name string) []RBACRole {
+	rawRoles := d.Get(name).([]interface{})
+
+	roles := []RBACRole{}
+	for _, item := range rawRoles {
+		i := item.(map[string]interface{})
+
+		role := RBACRole{
+			Name: i["name"].(string),
+		}
+
+		roles = append(roles, role)
+	}
+	return roles
+}
+
+func interfacesToString(list []interface{}) []string {
+	result := make([]string, len(list))
+	for i, item := range list {
+		result[i] = fmt.Sprint(item)
+	}
+
+	return result
 }
