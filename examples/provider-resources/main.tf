@@ -24,12 +24,12 @@ resource gitops_rbac test {
   branch = local.application_branch
   config = yamlencode(var.gitops_config)
   credentials = yamlencode(var.git_credentials)
-  roles = [{
+  roles {
     name = "cluster-admin"
-  }]
-  rules = [{
+  }
+  rules {
     apiGroup: [""],
     resources: ["configmaps"],
     verbs: [""]
-  }]
+  }
 }
