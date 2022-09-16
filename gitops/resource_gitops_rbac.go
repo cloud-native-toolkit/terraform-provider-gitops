@@ -335,12 +335,12 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
 	serverName := d.Get("server_name").(string)
-	layer := d.Get("layer").(string)
 	branch := d.Get("branch").(string)
-	moduleType := d.Get("type").(string)
 	valueFiles := d.Get("value_files").(string)
 	credentials := d.Get("credentials").(string)
 	gitopsConfig := d.Get("config").(string)
+	layer := "infrastructure"
+	moduleType := "base"
 
 	username := "cloudnativetoolkit"
 
@@ -358,7 +358,10 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 		"--branch", branch,
 		"--serverName", serverName,
 		"--layer", layer,
-		"--type", moduleType}
+		"--type", moduleType,
+		"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
+		"--helmChart", "rbac",
+		"--helmChartVersion", "0.2.0"}
 
 	if len(lock) > 0 {
 		args = append(args, "--lock", lock)

@@ -29,7 +29,7 @@ resource gitops_rbac test {
   }
   rules {
     api_groups = [""]
-    resources = ["configmaps"]
-    verbs = [""]
+    resources = ["configmaps","secrets"]
+    verbs = ["*"]
   }
 }
