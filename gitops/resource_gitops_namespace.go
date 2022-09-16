@@ -144,7 +144,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops namespace: name=%s, serverName=%s", name, serverName))
 
-	err = os.Mkdir(valuesPath, os.ModePerm)
+	err = os.MkdirAll(valuesPath, os.ModePerm)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -237,7 +237,7 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops rbac: name=%s, namespace=%s, serverName=%s", name, namespace, serverName))
 
-	err = os.Mkdir(valuesPath, os.ModePerm)
+	err = os.MkdirAll(valuesPath, os.ModePerm)
 	if err != nil {
 		diag.FromErr(err)
 	}
