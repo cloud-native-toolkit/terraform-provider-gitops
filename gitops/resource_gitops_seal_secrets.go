@@ -63,7 +63,7 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 
 	binDir := config.BinDir
 
-	certFile, err := writeCertFile(tmpDir, cert)
+	certFile, err := writeCertFile(ctx, tmpDir, cert)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -90,14 +90,14 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 		tflog.Info(ctx, "Sealing file: "+file.Name())
 
 		if annotations == nil {
-			result, err := encryptFile(baseArgs, binDir, sourceDir, destDir, file.Name())
+			result, err := encryptFile(ctx, baseArgs, binDir, sourceDir, destDir, file.Name())
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
 			tflog.Debug(ctx, "Sealed file written to: "+result)
 		} else {
-			result, err := encryptFileWithAnnotations(baseArgs, binDir, sourceDir, destDir, file.Name(), annotations)
+			result, err := encryptFileWithAnnotations(ctx, baseArgs, binDir, sourceDir, destDir, file.Name(), annotations)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -132,15 +132,17 @@ func resourceGitopsSealSecretsDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func encryptFile(args []string, binDir string, sourceDir string, destDir string, fileName string) (string, error) {
+func encryptFile(ctx context.Context, args []string, binDir string, sourceDir string, destDir string, fileName string) (string, error) {
 	sourceContents, err := os.ReadFile(fmt.Sprintf("%s/%s", sourceDir, fileName))
 	if err != nil {
 		return "", err
 	}
 
-	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
-
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
+	tflog.Info(ctx, "Writing encrypted secret to "+destFile)
+
+	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
+	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
 	outfilePipeIn, err := os.Create(destFile)
 	if err != nil {
@@ -150,9 +152,11 @@ func encryptFile(args []string, binDir string, sourceDir string, destDir string,
 
 	inputPipeOut, inputPipeIn := io.Pipe()
 	defer inputPipeIn.Close()
-	
+
 	cmd.Stdin = inputPipeOut
 	cmd.Stdout = outfilePipeIn
+
+	tflog.Debug(ctx, "Writing input yaml to pipe: "+string(sourceContents))
 
 	_, err = inputPipeIn.Write(sourceContents)
 	if err != nil {
@@ -172,7 +176,7 @@ func encryptFile(args []string, binDir string, sourceDir string, destDir string,
 	return destFile, nil
 }
 
-func encryptFileWithAnnotations(args []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
+func encryptFileWithAnnotations(ctx context.Context, args []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
 	sourceContents, err := os.ReadFile(fmt.Sprintf("%s/%s", sourceDir, fileName))
 	if err != nil {
 		return "", err
@@ -240,7 +244,7 @@ func encryptFileWithAnnotations(args []string, binDir string, sourceDir string, 
 	return destFile, nil
 }
 
-func writeCertFile(dirName string, cert string) (string, error) {
+func writeCertFile(ctx context.Context, dirName string, cert string) (string, error) {
 
 	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
@@ -248,6 +252,10 @@ func writeCertFile(dirName string, cert string) (string, error) {
 	}
 
 	certFile := fmt.Sprintf("%s/kubeseal.crt", dirName)
+
+	tflog.Info(ctx, "Writing cert to file: "+certFile)
+	tflog.Debug(ctx, "cert: "+cert)
+
 	err = os.WriteFile(certFile, []byte(cert), 0644)
 	if err != nil {
 		return "", err
