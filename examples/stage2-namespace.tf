@@ -15,3 +15,8 @@ resource local_file namespace {
   content = module.cntk_namespace.name
 }
 
+resource local_file dest1 {
+  filename = "${path.cwd}/.dest1"
+
+  content = module.cntk_namespace.dest1
+}

@@ -3,6 +3,7 @@ locals {
   create_operator_group = true
   argocd_namespace = "openshift-gitops"
   ci = true
+  sealed_secret_dest = gitops_seal_secrets.no_annotation.dest_dir
 }
 
 #resource gitops_namespace ns {
