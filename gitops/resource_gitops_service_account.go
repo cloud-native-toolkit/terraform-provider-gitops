@@ -86,7 +86,7 @@ func resourceGitopsServiceAccount() *schema.Resource {
 			"tmp_dir": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     ".tmp/rbac",
+				Default:     ".tmp/service-account",
 				Description: "The temporary directory where config files are written before adding to gitops repo",
 			},
 			"sccs": &schema.Schema{
@@ -257,11 +257,11 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 
 	err = os.MkdirAll(valuesPath, os.ModePerm)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 	err = os.WriteFile(valuesFile, valueData, 0644)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	var args = []string{
@@ -347,7 +347,7 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	d.SetId(scope + ":" + name + ":" + serverName + ":rbac")
+	d.SetId(scope + ":" + name + ":" + serverName + ":service-account")
 
 	return diags
 }
@@ -514,21 +514,4 @@ func getRBACRoles(d *schema.ResourceData, name string) []RBACRole {
 		roles = append(roles, role)
 	}
 	return roles
-}
-
-func interfacesToString(list []interface{}) []string {
-	if list == nil {
-		return nil
-	}
-
-	result := make([]string, len(list))
-	for i, item := range list {
-		if item == nil {
-			result[i] = ""
-		} else {
-			result[i] = item.(string)
-		}
-	}
-
-	return result
 }

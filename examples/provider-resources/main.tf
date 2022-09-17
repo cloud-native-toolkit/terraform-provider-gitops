@@ -33,3 +33,18 @@ resource gitops_service_account test {
     verbs = ["*"]
   }
 }
+
+resource gitops_seal_secrets no_annotation {
+  source_dir = "${path.module}/secrets"
+  dest_dir   = "${path.cwd}/no-annotation"
+  kubeseal_cert = var.kubeseal_cert
+  tmp_dir = "${path.cwd}/.tmp/no-annotation"
+}
+
+resource gitops_seal_secrets annotation {
+  source_dir = "${path.module}/secrets"
+  dest_dir   = "${path.cwd}/annotation"
+  kubeseal_cert = var.kubeseal_cert
+  tmp_dir = "${path.cwd}/.tmp/annotation"
+  annotations = ["test=value"]
+}

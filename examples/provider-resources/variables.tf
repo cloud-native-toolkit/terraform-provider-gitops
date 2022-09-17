@@ -71,3 +71,6 @@ variable "server_name" {
 
 variable "namespace" {
 }
+
+variable "kubeseal_cert" {
+}
