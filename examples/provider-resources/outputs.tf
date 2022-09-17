@@ -1,4 +1,4 @@
 output "name" {
-  value       = gitops_namespace.ns.name
+  value       = var.namespace
   description = "Namespace name"
 }
