@@ -90,12 +90,21 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 
 		tflog.Info(ctx, "Sealing file: "+file.Name())
 
-		result, err := signFile(baseArgs, binDir, sourceDir, destDir, file.Name(), annotations)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+		if annotations == nil {
+			result, err := encryptFile(baseArgs, binDir, sourceDir, destDir, file.Name())
+			if err != nil {
+				return diag.FromErr(err)
+			}
 
-		tflog.Debug(ctx, "Sealed file written to: "+result)
+			tflog.Debug(ctx, "Sealed file written to: "+result)
+		} else {
+			result, err := encryptFileWithAnnotations(baseArgs, binDir, sourceDir, destDir, file.Name(), annotations)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			tflog.Debug(ctx, "Sealed file written to: "+result)
+		}
 	}
 
 	d.SetId("sealCert:" + sourceDir + ":" + destDir)
@@ -124,7 +133,44 @@ func resourceGitopsSealSecretsDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func signFile(baseArgs []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
+func encryptFile(args []string, binDir string, sourceDir string, destDir string, fileName string) (string, error) {
+	sourceContents, err := os.ReadFile(fmt.Sprintf("%s/%s", sourceDir, fileName))
+	if err != nil {
+		return "", err
+	}
+
+	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
+
+	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
+
+	outfile, err := os.Create(destFile)
+	if err != nil {
+		return "", err
+	}
+	defer outfile.Close()
+
+	pr, pw := io.Pipe()
+	cmd.Stdin = pr
+	cmd.Stdout = outfile
+	_, err = pw.Write(sourceContents)
+	if err != nil {
+		return "", err
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return "", err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return "", err
+	}
+
+	return destFile, nil
+}
+
+func encryptFileWithAnnotations(baseArgs []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
 	args := append(baseArgs, "--from-file", fmt.Sprintf("%s/%s", sourceDir, fileName))
 
 	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
