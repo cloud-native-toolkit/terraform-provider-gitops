@@ -8,6 +8,7 @@ GIT_TOKEN=$(cat .git_token)
 BIN_DIR=$(cat .bin_dir)
 
 DEST1=$(cat .dest1)
+DEST2=$(cat .dest2)
 
 export PATH="${BIN_DIR}:${PATH}"
 
@@ -28,6 +29,11 @@ set -e
 ls "${DEST1}"
 ls "${DEST1}" | while read file; do
   cat "${DEST1}/${file}"
+done
+
+ls "${DEST2}"
+ls "${DEST2}" | while read file; do
+  cat "${DEST2}/${file}"
 done
 
 #validate_gitops_ns_content "${NAMESPACE}" "${SERVER_NAME}"
