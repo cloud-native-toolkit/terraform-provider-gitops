@@ -1,6 +1,8 @@
 package gitops
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -84,12 +86,15 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 
 	for _, file := range files {
 		if !strings.HasSuffix(file.Name(), "yaml") {
+			tflog.Debug(ctx, "Skipping file because it is not a yaml file: "+file.Name())
 			continue
 		}
 
-		tflog.Info(ctx, "Sealing file: "+file.Name())
+		tflog.Info(ctx, "Encrypting file: "+file.Name())
 
 		if annotations == nil {
+			tflog.Debug(ctx, "Encrypting file without annotations")
+
 			result, err := encryptFile(ctx, baseArgs, binDir, sourceDir, destDir, file.Name())
 			if err != nil {
 				return diag.FromErr(err)
@@ -97,6 +102,8 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 
 			tflog.Debug(ctx, "Sealed file written to: "+result)
 		} else {
+			tflog.Debug(ctx, "Encrypting file with annotations")
+
 			result, err := encryptFileWithAnnotations(ctx, baseArgs, binDir, sourceDir, destDir, file.Name(), annotations)
 			if err != nil {
 				return diag.FromErr(err)
@@ -133,13 +140,16 @@ func resourceGitopsSealSecretsDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func encryptFile(ctx context.Context, args []string, binDir string, sourceDir string, destDir string, fileName string) (string, error) {
-	sourceContents, err := os.ReadFile(fmt.Sprintf("%s/%s", sourceDir, fileName))
+	sourceFile := fmt.Sprintf("%s/%s", sourceDir, fileName)
+	tflog.Debug(ctx, "Reading file contents: "+sourceFile)
+
+	sourceContents, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return "", err
 	}
 
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
-	tflog.Info(ctx, "Writing encrypted secret to "+destFile)
+	tflog.Debug(ctx, "Encrypted secret destination file: "+destFile)
 
 	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
@@ -150,22 +160,24 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 	}
 	defer outfilePipeIn.Close()
 
-	inputPipeOut, inputPipeIn := io.Pipe()
-	defer inputPipeIn.Close()
-
-	cmd.Stdin = inputPipeOut
+	cmd.Stdin = bytes.NewReader(sourceContents)
 	cmd.Stdout = outfilePipeIn
 
-	tflog.Debug(ctx, "Writing input yaml to pipe: "+string(sourceContents))
-
-	_, err = inputPipeIn.Write(sourceContents)
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return "", err
 	}
 
+	tflog.Debug(ctx, "Writing input yaml to pipe: "+string(sourceContents))
+
 	err = cmd.Start()
 	if err != nil {
 		return "", err
+	}
+
+	inErr := bufio.NewScanner(stderr)
+	for inErr.Scan() {
+		tflog.Error(ctx, inErr.Text())
 	}
 
 	err = cmd.Wait()
@@ -177,7 +189,10 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 }
 
 func encryptFileWithAnnotations(ctx context.Context, args []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
-	sourceContents, err := os.ReadFile(fmt.Sprintf("%s/%s", sourceDir, fileName))
+	sourceFile := fmt.Sprintf("%s/%s", sourceDir, fileName)
+	tflog.Debug(ctx, "Reading file contents: "+sourceFile)
+
+	sourceContents, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return "", err
 	}
@@ -203,20 +218,12 @@ func encryptFileWithAnnotations(ctx context.Context, args []string, binDir strin
 	}
 	defer outfilePipeIn.Close()
 
-	inputPipeOut, inputPipeIn := io.Pipe()
-	defer inputPipeIn.Close()
-
 	sealedSecretPipeOut, sealedSecretPipeIn := io.Pipe()
 
-	cmd.Stdin = inputPipeOut
+	cmd.Stdin = bytes.NewReader(sourceContents)
 	cmd.Stdout = sealedSecretPipeIn
 	cmd2.Stdin = sealedSecretPipeOut
 	cmd2.Stdout = outfilePipeIn
-
-	_, err = inputPipeIn.Write(sourceContents)
-	if err != nil {
-		return "", err
-	}
 
 	err = cmd.Start()
 	if err != nil {
