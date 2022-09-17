@@ -2,12 +2,12 @@ package gitops
 
 import (
 	context "context"
+	b64 "encoding/base64"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	mutexkv "terraform-provider-gitops/mutex"
 	"os"
 	"path/filepath"
-	b64 "encoding/base64"
+	mutexkv "terraform-provider-gitops/mutex"
 )
 
 var gitopsMutexKV = mutexkv.NewMutexKV()
@@ -53,8 +53,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"gitops_namespace": resourceGitopsNamespace(),
-			"gitops_module":    resourceGitopsModule(),
+			"gitops_namespace":       resourceGitopsNamespace(),
+			"gitops_module":          resourceGitopsModule(),
+			"gitops_service_account": resourceGitopsServiceAccount(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
@@ -71,26 +72,26 @@ type ProviderConfig struct {
 }
 
 func createCaCertFile(caCert string) (string, error) {
-    // write contents of caCert to caCertFile
-   	basePath, err := os.Getwd()
-    if err != nil {
-        return "", err
-    }
+	// write contents of caCert to caCertFile
+	basePath, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
 
 	caCertFile := filepath.Join(basePath, "git-ca.crt")
 
-    decodedCaCert, err := b64.StdEncoding.DecodeString(caCert)
-    if err != nil {
-        return "", err
-    }
+	decodedCaCert, err := b64.StdEncoding.DecodeString(caCert)
+	if err != nil {
+		return "", err
+	}
 
-    d1 := []byte(decodedCaCert)
-    err = os.WriteFile(caCertFile, d1, 0666)
-    if err != nil {
-        return "", err
-    }
+	d1 := []byte(decodedCaCert)
+	err = os.WriteFile(caCertFile, d1, 0666)
+	if err != nil {
+		return "", err
+	}
 
-    return caCertFile, nil
+	return caCertFile, nil
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -106,12 +107,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	if len(caCert) > 0 && len(caCertFile) == 0 {
-	    newCaCertFile, err := createCaCertFile(caCert)
-	    if err != nil {
-	        return nil, diag.FromErr(err)
-	    }
+		newCaCertFile, err := createCaCertFile(caCert)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
 
-	    caCertFile = newCaCertFile
+		caCertFile = newCaCertFile
 	}
 
 	c := &ProviderConfig{

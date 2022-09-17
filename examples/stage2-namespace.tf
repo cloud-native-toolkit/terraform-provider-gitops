@@ -1,12 +1,11 @@
 
 module cntk_namespace {
-  source = "github.com/cloud-native-toolkit/terraform-gitops-namespace.git?ref=v1.12.2"
+  source = "./provider-resources"
 
-  name            = "cntk"
+  namespace       = "provider-test"
   server_name     = module.gitops.server_name
   gitops_config   = module.gitops.gitops_config
   git_credentials = module.gitops.git_credentials
-  ci              = false
 }
 
 resource local_file namespace {
@@ -14,3 +13,4 @@ resource local_file namespace {
 
   content = module.cntk_namespace.name
 }
+

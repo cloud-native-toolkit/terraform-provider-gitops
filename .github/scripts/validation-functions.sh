@@ -3,9 +3,9 @@
 validate_gitops_ns_content () {
   local NS="$1"
   local GITOPS_SERVER_NAME="${2:-default}"
+  local PAYLOAD_FILE="${3:-Chart.yaml}"
   local GITOPS_LAYER="1-infrastructure"
   local GITOPS_TYPE="base"
-  local PAYLOAD_FILE="ns.yaml"
 
   echo "Validating: namespace=${NS}, layer=${GITOPS_LAYER}, server=${GITOPS_SERVER_NAME}, type=${GITOPS_TYPE}"
 
