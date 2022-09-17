@@ -142,16 +142,19 @@ func encryptFile(args []string, binDir string, sourceDir string, destDir string,
 
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
 
-	outfile, err := os.Create(destFile)
+	outfilePipeIn, err := os.Create(destFile)
 	if err != nil {
 		return "", err
 	}
-	defer outfile.Close()
+	defer outfilePipeIn.Close()
 
-	pr, pw := io.Pipe()
-	cmd.Stdin = pr
-	cmd.Stdout = outfile
-	_, err = pw.Write(sourceContents)
+	inputPipeOut, inputPipeIn := io.Pipe()
+	defer inputPipeIn.Close()
+	
+	cmd.Stdin = inputPipeOut
+	cmd.Stdout = outfilePipeIn
+
+	_, err = inputPipeIn.Write(sourceContents)
 	if err != nil {
 		return "", err
 	}
@@ -169,41 +172,46 @@ func encryptFile(args []string, binDir string, sourceDir string, destDir string,
 	return destFile, nil
 }
 
-func encryptFileWithAnnotations(baseArgs []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
-	args := append(baseArgs, "--from-file", fmt.Sprintf("%s/%s", sourceDir, fileName))
+func encryptFileWithAnnotations(args []string, binDir string, sourceDir string, destDir string, fileName string, annotations []string) (string, error) {
+	sourceContents, err := os.ReadFile(fmt.Sprintf("%s/%s", sourceDir, fileName))
+	if err != nil {
+		return "", err
+	}
 
 	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
 
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
 
-	outfile, err := os.Create(destFile)
+	annotationArgs := []string{
+		"annotate",
+		"-f", "-",
+		"--local=true",
+		"--dry-run=client",
+		"--output=yaml"}
+
+	annotationArgs = append(annotationArgs, annotations...)
+
+	cmd2 := exec.Command(filepath.Join(binDir, "kubectl"), annotationArgs...)
+
+	outfilePipeIn, err := os.Create(destFile)
 	if err != nil {
 		return "", err
 	}
-	defer outfile.Close()
+	defer outfilePipeIn.Close()
 
-	pr, pw := io.Pipe()
-	var cmd2 *exec.Cmd
-	if len(annotations) == 0 {
-		cmd2 = exec.Command("echo", "")
+	inputPipeOut, inputPipeIn := io.Pipe()
+	defer inputPipeIn.Close()
 
-		cmd.Stdout = outfile
-	} else {
-		annotationArgs := []string{
-			"annotate",
-			"-f", "-",
-			"--local=true",
-			"--dry-run=client",
-			"--output=yaml"}
+	sealedSecretPipeOut, sealedSecretPipeIn := io.Pipe()
 
-		annotationArgs = append(annotationArgs, annotations...)
+	cmd.Stdin = inputPipeOut
+	cmd.Stdout = sealedSecretPipeIn
+	cmd2.Stdin = sealedSecretPipeOut
+	cmd2.Stdout = outfilePipeIn
 
-		cmd2 = exec.Command(filepath.Join(binDir, "kubectl"), annotationArgs...)
-
-		cmd.Stdout = pw
-		cmd2.Stdin = pr
-
-		cmd2.Stdout = outfile
+	_, err = inputPipeIn.Write(sourceContents)
+	if err != nil {
+		return "", err
 	}
 
 	err = cmd.Start()
@@ -216,7 +224,7 @@ func encryptFileWithAnnotations(baseArgs []string, binDir string, sourceDir stri
 	}
 
 	err = func() error {
-		defer pw.Close()
+		defer sealedSecretPipeIn.Close()
 
 		return cmd.Wait()
 	}()
