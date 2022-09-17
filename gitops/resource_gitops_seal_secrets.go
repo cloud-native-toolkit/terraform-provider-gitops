@@ -2,7 +2,6 @@ package gitops
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -169,8 +168,6 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 		return "", err
 	}
 
-	tflog.Debug(ctx, "Writing input yaml to pipe: "+string(sourceContents))
-
 	err = cmd.Start()
 	if err != nil {
 		return "", err
@@ -193,10 +190,11 @@ func encryptFileWithAnnotations(ctx context.Context, args []string, binDir strin
 	sourceFile := fmt.Sprintf("%s/%s", sourceDir, fileName)
 	tflog.Debug(ctx, "Reading file contents: "+sourceFile)
 
-	sourceContents, err := os.ReadFile(sourceFile)
+	f, err := os.Open(sourceFile)
 	if err != nil {
 		return "", err
 	}
+	fReader := bufio.NewReader(f)
 
 	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
 
@@ -221,7 +219,7 @@ func encryptFileWithAnnotations(ctx context.Context, args []string, binDir strin
 
 	sealedSecretPipeOut, sealedSecretPipeIn := io.Pipe()
 
-	cmd.Stdin = bytes.NewReader(sourceContents)
+	cmd.Stdin = fReader
 	cmd.Stdout = sealedSecretPipeIn
 	cmd2.Stdin = sealedSecretPipeOut
 	cmd2.Stdout = outfilePipeIn
