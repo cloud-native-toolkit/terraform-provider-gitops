@@ -70,8 +70,7 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 
 	var baseArgs = []string{
 		"--cert", certFile,
-		"--format", "yaml",
-		"--raw"}
+		"--format", "yaml"}
 
 	err = os.MkdirAll(destDir, os.ModePerm)
 	if err != nil {
