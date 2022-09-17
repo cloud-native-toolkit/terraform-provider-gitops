@@ -92,7 +92,7 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 
 		tflog.Info(ctx, "Encrypting file: "+file.Name())
 
-		if annotations == nil {
+		if len(annotations) == 0 {
 			tflog.Debug(ctx, "Encrypting file without annotations")
 
 			result, err := encryptFile(ctx, baseArgs, binDir, sourceDir, destDir, file.Name())
@@ -143,10 +143,11 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 	sourceFile := fmt.Sprintf("%s/%s", sourceDir, fileName)
 	tflog.Debug(ctx, "Reading file contents: "+sourceFile)
 
-	sourceContents, err := os.ReadFile(sourceFile)
+	f, err := os.Open(sourceFile)
 	if err != nil {
 		return "", err
 	}
+	fReader := bufio.NewReader(f)
 
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
 	tflog.Debug(ctx, "Encrypted secret destination file: "+destFile)
@@ -160,7 +161,7 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 	}
 	defer outfilePipeIn.Close()
 
-	cmd.Stdin = bytes.NewReader(sourceContents)
+	cmd.Stdin = fReader
 	cmd.Stdout = outfilePipeIn
 
 	stderr, err := cmd.StderrPipe()
