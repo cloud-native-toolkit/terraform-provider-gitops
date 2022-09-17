@@ -14,12 +14,12 @@ import (
 	"path/filepath"
 )
 
-func resourceGitopsRBAC() *schema.Resource {
+func resourceGitopsServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGitopsRBACCreate,
-		ReadContext:   resourceGitopsRBACRead,
-		UpdateContext: resourceGitopsRBACUpdate,
-		DeleteContext: resourceGitopsRBACDelete,
+		CreateContext: resourceGitopsServiceAccountCreate,
+		ReadContext:   resourceGitopsServiceAccountRead,
+		UpdateContext: resourceGitopsServiceAccountUpdate,
+		DeleteContext: resourceGitopsServiceAccountDelete,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -54,22 +54,33 @@ func resourceGitopsRBAC() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"service_account_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+			"create_service_account": &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Flag indicating the service account should be created",
+			},
+			"all_service_accounts": &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Flag indicating the rbac rules should be applied to all service accounts in the namespace",
+			},
 			"cluster_scope": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Flag setting the RBAC rules at cluster scope vs namespace scope",
 			},
-			"service_account_name": &schema.Schema{
+			"rbac_namespace": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The name of the service account that should be bound to the role. If not provided defaults to all service accounts in the namespace",
-				Default:     "",
-			},
-			"service_account_namespace": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The namespace where the service account has been created. If not provided defaults to namespace",
+				Description: "The namespace where the rbac rules should be created. If not provided defaults to the service account namespace",
 				Default:     "",
 			},
 			"tmp_dir": &schema.Schema{
@@ -77,6 +88,12 @@ func resourceGitopsRBAC() *schema.Resource {
 				Optional:    true,
 				Default:     ".tmp/rbac",
 				Description: "The temporary directory where config files are written before adding to gitops repo",
+			},
+			"sccs": &schema.Schema{
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of sccs that should be associated with the service account. Supports anyuid and/or privileged",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"rules": &schema.Schema{
 				Type:     schema.TypeList,
@@ -128,11 +145,6 @@ func resourceGitopsRBAC() *schema.Resource {
 	}
 }
 
-type RBACServiceAccount struct {
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
-}
-
 type RBACRule struct {
 	ApiGroups     []string `yaml:"apiGroups"`
 	Resources     []string `yaml:"resources"`
@@ -145,10 +157,14 @@ type RBACRole struct {
 }
 
 type RBACValues struct {
-	ServiceAccount RBACServiceAccount `yaml:"serviceAccount"`
-	ClusterScope   bool               `yaml:"clusterScope"`
-	Roles          []RBACRole         `yaml:"roles"`
-	Rules          []RBACRule         `yaml:"rules"`
+	Create             bool       `yaml:"create"`
+	AllServiceAccounts bool       `yaml:"allServiceAccounts"`
+	ClusterScope       bool       `yaml:"clusterScope"`
+	Sccs               []string   `yaml:"sccs"`
+	Roles              []RBACRole `yaml:"roles"`
+	Rules              []RBACRule `yaml:"rules"`
+	RbacNamespace      string     `yaml:"rbacNamespace"`
+	Name               string     `yaml:"name,omitempty"`
 }
 
 func getNameInput(d *schema.ResourceData) string {
@@ -175,7 +191,7 @@ func getGitopsConfigInput(d *schema.ResourceData) string {
 	return d.Get("config").(string)
 }
 
-func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
@@ -191,21 +207,24 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 	moduleType := "base"
 
 	tmpDir := d.Get("tmp_dir").(string)
+	createServiceAccount := d.Get("create_service_account").(bool)
+	allServiceAccounts := d.Get("all_service_accounts").(bool)
 	clusterScope := d.Get("cluster_scope").(bool)
+	rbacNamespace := d.Get("rbac_namespace").(string)
+	servieAccountName := d.Get("service_account_name").(string)
+	sccs := interfacesToString(d.Get("sccs").([]interface{}))
 	rules := getRBACRules(d, "rules")
 	roles := getRBACRoles(d, "roles")
 
-	serviceAccountName := d.Get("service_account_name").(string)
-	serviceAccountNamespace := d.Get("service_account_namespace").(string)
-
 	rbacValues := RBACValues{
-		ServiceAccount: RBACServiceAccount{
-			Name:      serviceAccountName,
-			Namespace: serviceAccountNamespace,
-		},
-		ClusterScope: clusterScope,
-		Roles:        roles,
-		Rules:        rules,
+		Create:             createServiceAccount,
+		AllServiceAccounts: allServiceAccounts,
+		RbacNamespace:      rbacNamespace,
+		Sccs:               sccs,
+		ClusterScope:       clusterScope,
+		Roles:              roles,
+		Rules:              rules,
+		Name:               servieAccountName,
 	}
 
 	valueData, err := yaml.Marshal(&rbacValues)
@@ -254,8 +273,8 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 		"--layer", layer,
 		"--type", moduleType,
 		"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
-		"--helmChart", "rbac",
-		"--helmChartVersion", "0.2.0",
+		"--helmChart", "service-account",
+		"--helmChartVersion", "1.0.0",
 		"--valueFiles", valuesFile}
 
 	if len(lock) > 0 {
@@ -333,19 +352,19 @@ func resourceGitopsRBACCreate(ctx context.Context, d *schema.ResourceData, m int
 	return diags
 }
 
-func resourceGitopsRBACRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceGitopsServiceAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
 	return diags
 }
 
-func resourceGitopsRBACUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceGitopsServiceAccountUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// TODO implement update...
 	return resourceGitopsModuleRead(ctx, d, m)
 }
 
-func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceGitopsServiceAccountDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
@@ -383,8 +402,8 @@ func resourceGitopsRBACDelete(ctx context.Context, d *schema.ResourceData, m int
 		"--layer", layer,
 		"--type", moduleType,
 		"--helmRepoUrl", "https://charts.cloudnativetoolkit.dev",
-		"--helmChart", "rbac",
-		"--helmChartVersion", "0.2.0"}
+		"--helmChart", "service-account",
+		"--helmChartVersion", "1.0.0"}
 
 	if len(lock) > 0 {
 		args = append(args, "--lock", lock)

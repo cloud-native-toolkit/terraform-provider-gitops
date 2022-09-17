@@ -17,7 +17,7 @@ resource gitops_namespace ns {
   credentials = yamlencode(var.git_credentials)
 }
 
-resource gitops_rbac test {
+resource gitops_service_account test {
   name = "test-rbac"
   namespace = gitops_namespace.ns.name
   server_name = var.server_name

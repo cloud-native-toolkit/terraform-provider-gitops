@@ -53,9 +53,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"gitops_namespace": resourceGitopsNamespace(),
-			"gitops_module":    resourceGitopsModule(),
-			"gitops_rbac":      resourceGitopsRBAC(),
+			"gitops_namespace":       resourceGitopsNamespace(),
+			"gitops_module":          resourceGitopsModule(),
+			"gitops_service_account": resourceGitopsServiceAccount(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
