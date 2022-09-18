@@ -3,6 +3,7 @@ locals {
   create_operator_group = true
   argocd_namespace = "openshift-gitops"
   ci = true
+  sealed_secret_dest = gitops_seal_secrets.no_annotation.dest_dir
 }
 
 resource gitops_namespace ns {
@@ -32,4 +33,19 @@ resource gitops_service_account test {
     resources = ["configmaps","secrets"]
     verbs = ["*"]
   }
+}
+
+resource gitops_seal_secrets no_annotation {
+  source_dir = "${path.module}/secrets"
+  dest_dir   = "${path.cwd}/no-annotation"
+  kubeseal_cert = var.kubeseal_cert
+  tmp_dir = "${path.cwd}/.tmp/no-annotation"
+}
+
+resource gitops_seal_secrets annotation {
+  source_dir = "${path.module}/secrets"
+  dest_dir   = "${path.cwd}/annotation"
+  kubeseal_cert = var.kubeseal_cert
+  tmp_dir = "${path.cwd}/.tmp/annotation"
+  annotations = ["test=value"]
 }
