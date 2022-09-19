@@ -59,26 +59,31 @@ func resourceGitopsPullSecret() *schema.Resource {
 				Required: true,
 			},
 			"kubeseal_cert": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The certificate that will be used to encrypt the secret with kubeseal",
 			},
-			"docker_server": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"registry_server": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The host name of the server that will be stored in the pull secret",
 			},
-			"docker_username": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"registry_username": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The username to the container registry that will be stored in the pull secret",
 			},
-			"docker_password": &schema.Schema{
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+			"registry_password": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				Description: "The password to the container registry that will be stored in the pull secret",
 			},
 			"secret_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The name of the secret that will be created. If not provided the module name will be used",
 			},
 			"tmp_dir": &schema.Schema{
 				Type:     schema.TypeString,
@@ -124,9 +129,9 @@ func resourceGitopsPullSecretCreate(ctx context.Context, d *schema.ResourceData,
 	pullSecretConfig := PullSecretConfig{
 		Name:      pullSecretName,
 		Namespace: namespace,
-		Server:    d.Get("docker_server").(string),
-		Username:  d.Get("docker_username").(string),
-		Password:  d.Get("docker_password").(string),
+		Server:    d.Get("registry_server").(string),
+		Username:  d.Get("registry_username").(string),
+		Password:  d.Get("registry_password").(string),
 	}
 
 	// create secret in secretDir
@@ -202,9 +207,9 @@ func resourceGitopsPullSecretDelete(ctx context.Context, d *schema.ResourceData,
 	pullSecretConfig := PullSecretConfig{
 		Name:      pullSecretName,
 		Namespace: namespace,
-		Server:    d.Get("docker_server").(string),
-		Username:  d.Get("docker_username").(string),
-		Password:  d.Get("docker_password").(string),
+		Server:    d.Get("registry_server").(string),
+		Username:  d.Get("registry_username").(string),
+		Password:  d.Get("registry_password").(string),
 	}
 
 	// create secret in secretDir

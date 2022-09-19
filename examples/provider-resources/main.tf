@@ -63,8 +63,8 @@ resource gitops_pull_secret test {
   credentials = yamlencode(var.git_credentials)
   config = yamlencode(var.gitops_config)
   kubeseal_cert = var.kubeseal_cert
-  docker_server = "quay.io"
-  docker_username = "myuser"
-  docker_password = random_password.docker_password.result
+  registry_server = "quay.io"
+  registry_username = "myuser"
+  registry_password = random_password.docker_password.result
   secret_name = "mysecret"
 }
