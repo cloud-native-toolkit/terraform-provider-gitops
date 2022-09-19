@@ -138,6 +138,24 @@ func resourceGitopsSealSecretsDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
+func encryptWithCert(ctx context.Context, binDir string, tmpDir string, sourceDir string, destDir string, fileName string, cert string) (string, error) {
+	certFile, err := writeCertFile(ctx, tmpDir, cert)
+	if err != nil {
+		return "", err
+	}
+
+	var baseArgs = []string{
+		"--cert", certFile,
+		"--format", "yaml"}
+
+	err = os.MkdirAll(destDir, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return encryptFile(ctx, baseArgs, binDir, sourceDir, destDir, fileName)
+}
+
 func encryptFile(ctx context.Context, args []string, binDir string, sourceDir string, destDir string, fileName string) (string, error) {
 	sourceFile := fmt.Sprintf("%s/%s", sourceDir, fileName)
 	tflog.Debug(ctx, "Reading file contents: "+sourceFile)

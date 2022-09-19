@@ -49,3 +49,22 @@ resource gitops_seal_secrets annotation {
   tmp_dir = "${path.cwd}/.tmp/annotation"
   annotations = ["test=value"]
 }
+
+resource random_password docker_password {
+  length = 16
+}
+
+resource gitops_pull_secret test {
+  name = "test-secret"
+  namespace = gitops_namespace.ns.name
+  server_name = var.server_name
+  branch = local.application_branch
+  layer = "services"
+  credentials = yamlencode(var.git_credentials)
+  config = yamlencode(var.gitops_config)
+  kubeseal_cert = var.kubeseal_cert
+  docker_server = "quay.io"
+  docker_username = "myuser"
+  docker_password = random_password.docker_password.result
+  secret_name = "mysecret"
+}
