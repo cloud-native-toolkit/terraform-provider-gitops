@@ -248,6 +248,7 @@ func resourceGitopsPullSecretDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func createSecret(ctx context.Context, binDir string, destDir string, fileName string, secretData PullSecretConfig) (string, error) {
+
 	args := []string{
 		"create",
 		"secret",
@@ -263,6 +264,10 @@ func createSecret(ctx context.Context, binDir string, destDir string, fileName s
 	cmd := exec.Command(filepath.Join(binDir, "kubectl"), args...)
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
+	err := os.MkdirAll(destDir, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 	destFile := path.Join(destDir, fileName)
 
 	outfilePipeIn, err := os.Create(destFile)
