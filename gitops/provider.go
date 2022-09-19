@@ -57,6 +57,7 @@ func Provider() *schema.Provider {
 			"gitops_module":          resourceGitopsModule(),
 			"gitops_service_account": resourceGitopsServiceAccount(),
 			"gitops_seal_secrets":    resourceGitopsSealSecrets(),
+			"gitops_pull_secret":     resourceGitopsPullSecret(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
