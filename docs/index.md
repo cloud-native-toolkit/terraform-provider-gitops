@@ -3,9 +3,7 @@
 page_title: "gitops Provider"
 subcategory: ""
 description: |-
-  Provides resources to add (and remove) content to a Cloud Native Toolkit gitops repo. This version of the module is a thin
-  wrapper around the [igc](https://github.com/cloud-native-toolkit/ibm-garage-cloud-cli). It expects the cli to be available
-  in the provided `bin_dir`
+  
 ---
 
 # gitops Provider
@@ -19,13 +17,13 @@ description: |-
 
 ### Required
 
-- **bin_dir** (String)
+- `bin_dir` (String)
 
 ### Optional
 
-- **lock** (String)
-- **token** (String, Sensitive)
-- **username** (String)
-- **ca_cert** (String)
-- **ca_cert_file (String)
-- **debug** (String)
+- `ca_cert` (String)
+- `ca_cert_file` (String)
+- `debug` (String)
+- `lock` (String)
+- `token` (String, Sensitive)
+- `username` (String)

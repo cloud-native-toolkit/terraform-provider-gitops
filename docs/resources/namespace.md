@@ -3,7 +3,7 @@
 page_title: "gitops_namespace Resource - terraform-provider-gitops"
 subcategory: ""
 description: |-
-  Populates the gitops repo with the namespace content using the [igc](https://github.com/cloud-native-toolkit/ibm-garage-cloud-cli) `gitops-namespace` command.
+  
 ---
 
 # gitops_namespace (Resource)
@@ -17,15 +17,23 @@ description: |-
 
 ### Required
 
-- **config** (String) - yaml encoded string of the gitops repo config
-- **content_dir** (String) - the local directory containing the yaml files or url containing a single yaml file
-- **credentials** (String, Sensitive) - yaml encoded string of the gitops repo credentials
-- **name** (String) - the name of the namespace that will be added to the repo
+- `config` (String)
+- `credentials` (String, Sensitive)
+- `name` (String)
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **server_name** (String) - the name of the server, used for a multi-tenanted gitops repo. The default is "default"
-- **username** (String)
+- `argocd_namespace` (String)
+- `branch` (String)
+- `content_dir` (String)
+- `create_operator_group` (Boolean)
+- `dev_namespace` (Boolean)
+- `server_name` (String)
+- `tmp_dir` (String)
+- `value_files` (String)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

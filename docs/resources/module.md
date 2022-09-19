@@ -3,8 +3,7 @@
 page_title: "gitops_module Resource - terraform-provider-gitops"
 subcategory: ""
 description: |-
-  Populates the gitops repo with the application/module content using the [igc](https://github.com/cloud-native-toolkit/ibm-garage-cloud-cli) `gitops-module` command.
-
+  
 ---
 
 # gitops_module (Resource)
@@ -18,17 +17,25 @@ description: |-
 
 ### Required
 
-- **config** (String) - yaml encoded string of the gitops repo config
-- **content_dir** (String) - the local directory containing the yaml files or url containing a single yaml file
-- **credentials** (String, Sensitive) - yaml encoded string of the gitops repo credentials
-- **layer** (String) - the layer for the module (infrastructure, services, application)
-- **name** (String) - the name of the application/module in the repo
-- **namespace** (String) - the namespace where the application should be deployed
+- `config` (String)
+- `credentials` (String, Sensitive)
+- `layer` (String)
+- `name` (String)
+- `namespace` (String)
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **server_name** (String) - the name of the server, used for a multi-tenanted gitops repo. The default is "default"
-- **type** (String) - the type of module (base, operators, instances). The default is "base"
+- `branch` (String)
+- `content_dir` (String)
+- `helm_chart` (String)
+- `helm_chart_version` (String)
+- `helm_repo_url` (String)
+- `server_name` (String)
+- `type` (String)
+- `value_files` (String)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 
