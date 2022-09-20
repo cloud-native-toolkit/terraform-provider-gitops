@@ -128,20 +128,3 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	return c, diags
 }
-
-func interfacesToString(list []interface{}) []string {
-	if list == nil {
-		return nil
-	}
-
-	result := make([]string, len(list))
-	for i, item := range list {
-		if item == nil {
-			result[i] = ""
-		} else {
-			result[i] = item.(string)
-		}
-	}
-
-	return result
-}
