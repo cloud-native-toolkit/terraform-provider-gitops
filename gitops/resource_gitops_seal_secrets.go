@@ -22,25 +22,25 @@ func resourceGitopsSealSecrets() *schema.Resource {
 		UpdateContext: resourceGitopsSealSecretsUpdate,
 		DeleteContext: resourceGitopsSealSecretsDelete,
 		Schema: map[string]*schema.Schema{
-			"source_dir": &schema.Schema{
+			"source_dir": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"dest_dir": &schema.Schema{
+			"dest_dir": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kubeseal_cert": &schema.Schema{
+			"kubeseal_cert": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "The list of annotations that should be added to the generated Sealed Secrets. Expected format of each annotation is a string if 'key=value'",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"tmp_dir": &schema.Schema{
+			"tmp_dir": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     ".tmp/sealed-secrets",
