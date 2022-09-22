@@ -57,6 +57,7 @@ func Provider() *schema.Provider {
 			"gitops_module":          resourceGitopsModule(),
 			"gitops_service_account": resourceGitopsServiceAccount(),
 			"gitops_seal_secrets":    resourceGitopsSealSecrets(),
+			"gitops_pull_secret":     resourceGitopsPullSecret(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
@@ -126,21 +127,4 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 
 	return c, diags
-}
-
-func interfacesToString(list []interface{}) []string {
-	if list == nil {
-		return nil
-	}
-
-	result := make([]string, len(list))
-	for i, item := range list {
-		if item == nil {
-			result[i] = ""
-		} else {
-			result[i] = item.(string)
-		}
-	}
-
-	return result
 }

@@ -22,25 +22,25 @@ func resourceGitopsSealSecrets() *schema.Resource {
 		UpdateContext: resourceGitopsSealSecretsUpdate,
 		DeleteContext: resourceGitopsSealSecretsDelete,
 		Schema: map[string]*schema.Schema{
-			"source_dir": &schema.Schema{
+			"source_dir": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"dest_dir": &schema.Schema{
+			"dest_dir": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kubeseal_cert": &schema.Schema{
+			"kubeseal_cert": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "The list of annotations that should be added to the generated Sealed Secrets. Expected format of each annotation is a string if 'key=value'",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"tmp_dir": &schema.Schema{
+			"tmp_dir": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     ".tmp/sealed-secrets",
@@ -136,6 +136,24 @@ func resourceGitopsSealSecretsDelete(ctx context.Context, d *schema.ResourceData
 	d.SetId("")
 
 	return diags
+}
+
+func encryptWithCert(ctx context.Context, binDir string, tmpDir string, sourceDir string, destDir string, fileName string, cert string) (string, error) {
+	certFile, err := writeCertFile(ctx, tmpDir, cert)
+	if err != nil {
+		return "", err
+	}
+
+	var baseArgs = []string{
+		"--cert", certFile,
+		"--format", "yaml"}
+
+	err = os.MkdirAll(destDir, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return encryptFile(ctx, baseArgs, binDir, sourceDir, destDir, fileName)
 }
 
 func encryptFile(ctx context.Context, args []string, binDir string, sourceDir string, destDir string, fileName string) (string, error) {

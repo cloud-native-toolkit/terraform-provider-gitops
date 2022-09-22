@@ -167,30 +167,6 @@ type RBACValues struct {
 	Name               string     `yaml:"name,omitempty"`
 }
 
-func getNameInput(d *schema.ResourceData) string {
-	return d.Get("name").(string)
-}
-
-func getNamespaceInput(d *schema.ResourceData) string {
-	return d.Get("namespace").(string)
-}
-
-func getServerNameInput(d *schema.ResourceData) string {
-	return d.Get("server_name").(string)
-}
-
-func getBranchInput(d *schema.ResourceData) string {
-	return d.Get("branch").(string)
-}
-
-func getCredentialsInput(d *schema.ResourceData) string {
-	return d.Get("credentials").(string)
-}
-
-func getGitopsConfigInput(d *schema.ResourceData) string {
-	return d.Get("config").(string)
-}
-
 func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics

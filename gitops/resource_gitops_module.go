@@ -1,9 +1,10 @@
 package gitops
 
 import (
-    "bufio"
+	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -11,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"fmt"
 )
 
 func resourceGitopsModule() *schema.Resource {
@@ -60,14 +60,14 @@ func resourceGitopsModule() *schema.Resource {
 				Default:  "main",
 			},
 			"layer": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"infrastructure", "services", "applications"}, false),
 			},
 			"type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "base",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "base",
 				ValidateFunc: validation.StringInSlice([]string{"base", "instances", "operators"}, false),
 			},
 			"value_files": &schema.Schema{
@@ -89,134 +89,32 @@ func resourceGitopsModule() *schema.Resource {
 }
 
 func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
 	config := m.(*ProviderConfig)
 
-	name := d.Get("name").(string)
-	namespace := d.Get("namespace").(string)
-	contentDir := d.Get("content_dir").(string)
-	serverName := d.Get("server_name").(string)
-	layer := d.Get("layer").(string)
-	branch := d.Get("branch").(string)
-	moduleType := d.Get("type").(string)
-	valueFiles := d.Get("value_files").(string)
-	credentials := d.Get("credentials").(string)
-	gitopsConfig := d.Get("config").(string)
+	moduleConfig := GitopsModuleConfig{
+		Name:        getNameInput(d),
+		Namespace:   getNamespaceInput(d),
+		Branch:      getBranchInput(d),
+		ServerName:  getServerNameInput(d),
+		Layer:       getLayerInput(d),
+		Type:        getTypeInput(d),
+		ContentDir:  getContentDirInput(d),
+		ValueFiles:  getValueFilesInput(d),
+		CaCert:      config.CaCertFile,
+		Debug:       config.Debug,
+		Credentials: getCredentialsInput(d),
+		Config:      getGitopsConfigInput(d),
+		HelmConfig:  helmConfigFromResourceData(d),
+	}
 
-	helmRepoUrl := d.Get("helm_repo_url").(string)
-	helmChart := d.Get("helm_chart").(string)
-	helmChartVersion := d.Get("helm_chart_version").(string)
-
-	binDir := config.BinDir
-	lock := config.Lock
-	debug := config.Debug
-	caCert := config.CaCertFile
-
-	// this should be replaced with the actual git user
-	username := "cloudnativetoolkit"
-
-	gitopsMutexKV.Lock(username)
-
-	defer gitopsMutexKV.Unlock(username)
-
-	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops module: name=%s, namespace=%s, serverName=%s", name, namespace, serverName))
-
-	var args = []string{
-	  "gitops-module",
-	  name,
-	  "-n", namespace,
-	  "--branch", branch,
-	  "--serverName", serverName,
-	  "--layer", layer,
-      "--type", moduleType}
-
-    if len(contentDir) > 0 {
-      args = append(args, "--contentDir", contentDir)
-    } else if len(helmRepoUrl) > 0 && len(helmChart) > 0 && len(helmChartVersion) > 0 {
-      args = append(args,
-        "--helmRepoUrl", helmRepoUrl,
-        "--helmChart", helmChart,
-        "--helmChartVersion", helmChartVersion)
-    } else {
-        return diag.FromErr(errors.New("contentDir or helmRepoUrl, helmChart, and helmChartVersion are required"))
-    }
-
-    if len(lock) > 0 {
-      args = append(args, "--lock", lock)
-    }
-    if len(valueFiles) > 0 {
-      args = append(args, "--valueFiles", valueFiles)
-    }
-    if len(caCert) > 0 {
-      args = append(args, "--caCert", caCert)
-    }
-    if len(debug) > 0 {
-      args = append(args, "--debug", debug)
-    }
-
-	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
-
-    tflog.Debug(ctx, "Executing command: " + cmd.String())
-
-	gitEmail := "cloudnativetoolkit@gmail.com"
-	gitName := "Cloud Native Toolkit"
-
-	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+credentials)
-	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
-	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
-	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
-	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
-	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
-	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
-
-	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", updatedEnv))
-
-	cmd.Env = updatedEnv
-
-    stdout, err := cmd.StdoutPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
-
-    stderr, err := cmd.StderrPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
-
-    // start the command after having set up the pipe
-    if err := cmd.Start(); err != nil {
+	id, err := populateGitopsModule(ctx, config.BinDir, moduleConfig, false)
+	if err != nil {
 		return diag.FromErr(err)
-    }
+	}
 
-    // read command's stdout line by line
-    in := bufio.NewScanner(stdout)
-    inErr := bufio.NewScanner(stderr)
-
-    for in.Scan() {
-        if debug == "true" {
-          tflog.Debug(ctx, in.Text())
-        } else {
-          tflog.Info(ctx, in.Text())
-        }
-    }
-
-    for inErr.Scan() {
-        tflog.Error(ctx, inErr.Text())
-    }
-
-    if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
-
-    if err := in.Err(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
-
-	d.SetId(namespace + ":" + name + ":" + serverName + ":" + contentDir)
+	d.SetId(id)
 
 	return diags
 }
@@ -233,68 +131,92 @@ func resourceGitopsModuleUpdate(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
 	config := m.(*ProviderConfig)
 
-	binDir := config.BinDir
-	lock := config.Lock
-	debug := config.Debug
-	caCert := config.CaCertFile
+	moduleConfig := GitopsModuleConfig{
+		Name:        getNameInput(d),
+		Namespace:   getNamespaceInput(d),
+		Branch:      getBranchInput(d),
+		ServerName:  getServerNameInput(d),
+		Layer:       getLayerInput(d),
+		Type:        getTypeInput(d),
+		ContentDir:  getContentDirInput(d),
+		ValueFiles:  getValueFilesInput(d),
+		CaCert:      config.CaCertFile,
+		Debug:       config.Debug,
+		Credentials: getCredentialsInput(d),
+		Config:      getGitopsConfigInput(d),
+		HelmConfig:  helmConfigFromResourceData(d),
+	}
 
-	name := d.Get("name").(string)
-	namespace := d.Get("namespace").(string)
-	contentDir := d.Get("content_dir").(string)
-	serverName := d.Get("server_name").(string)
-	layer := d.Get("layer").(string)
-	branch := d.Get("branch").(string)
-	moduleType := d.Get("type").(string)
-	valueFiles := d.Get("value_files").(string)
-	credentials := d.Get("credentials").(string)
-	gitopsConfig := d.Get("config").(string)
+	id, err := populateGitopsModule(ctx, config.BinDir, moduleConfig, true)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
+	d.SetId(id)
+
+	return diags
+}
+
+func populateGitopsModule(ctx context.Context, binDir string, gitopsConfig GitopsModuleConfig, delete bool) (string, error) {
+
+	// this should be replaced with the actual git user
 	username := "cloudnativetoolkit"
 
 	gitopsMutexKV.Lock(username)
 
 	defer gitopsMutexKV.Unlock(username)
 
-	tflog.Info(ctx, fmt.Sprintf("Destroying gitops module: name=%s, namespace=%s, serverName=%s", name, namespace, serverName))
+	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops module: name=%s, namespace=%s, serverName=%s", gitopsConfig.Name, gitopsConfig.Namespace, gitopsConfig.ServerName))
 
 	var args = []string{
-	  "gitops-module",
-	  name,
-	  "--delete",
-	  "-n", namespace,
-	  "--contentDir", contentDir,
-	  "--branch", branch,
-	  "--serverName", serverName,
-	  "--layer", layer,
-      "--type", moduleType}
+		"gitops-module",
+		gitopsConfig.Name,
+		"-n", gitopsConfig.Namespace,
+		"--branch", gitopsConfig.Branch,
+		"--serverName", gitopsConfig.ServerName,
+		"--layer", gitopsConfig.Layer,
+		"--type", gitopsConfig.Type}
 
-    if len(lock) > 0 {
-      args = append(args, "--lock", lock)
-    }
-    if len(valueFiles) > 0 {
-      args = append(args, "--valueFiles", valueFiles)
-    }
-    if len(caCert) > 0 {
-      args = append(args, "--caCert", caCert)
-    }
-    if len(debug) > 0 {
-      args = append(args, "--debug", debug)
-    }
+	if delete {
+		args = append(args, "--delete")
+	}
+
+	if len(gitopsConfig.ContentDir) > 0 {
+		args = append(args, "--contentDir", gitopsConfig.ContentDir)
+	} else if gitopsConfig.HelmConfig != nil {
+		helmConfig := *gitopsConfig.HelmConfig
+
+		args = append(args,
+			"--helmRepoUrl", helmConfig.RepoUrl,
+			"--helmChart", helmConfig.Chart,
+			"--helmChartVersion", helmConfig.ChartVersion)
+	} else {
+		return "", errors.New("contentDir or helmRepoUrl, helmChart, and helmChartVersion are required")
+	}
+
+	if len(gitopsConfig.ValueFiles) > 0 {
+		args = append(args, "--valueFiles", gitopsConfig.ValueFiles)
+	}
+	if len(gitopsConfig.CaCert) > 0 {
+		args = append(args, "--caCert", gitopsConfig.CaCert)
+	}
+	if len(gitopsConfig.Debug) > 0 {
+		args = append(args, "--debug", gitopsConfig.Debug)
+	}
 
 	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
 
-    tflog.Debug(ctx, "Executing command: " + cmd.String())
+	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
 
-	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+credentials)
-	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig)
+	updatedEnv := append(os.Environ(), "GIT_CREDENTIALS="+gitopsConfig.Credentials)
+	updatedEnv = append(updatedEnv, "GITOPS_CONFIG="+gitopsConfig.Config)
 	updatedEnv = append(updatedEnv, "EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_AUTHOR_NAME="+gitName)
@@ -305,48 +227,53 @@ func resourceGitopsModuleDelete(ctx context.Context, d *schema.ResourceData, m i
 
 	cmd.Env = updatedEnv
 
-    stdout, err := cmd.StdoutPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
 
-    stderr, err := cmd.StderrPipe()
-    if err != nil {
-        return diag.FromErr(err)
-    }
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return "", err
+	}
 
-    // start the command after having set up the pipe
-    if err := cmd.Start(); err != nil {
-		return diag.FromErr(err)
-    }
+	// start the command after having set up the pipe
+	if err := cmd.Start(); err != nil {
+		return "", err
+	}
 
-    // read command's stdout line by line
-    in := bufio.NewScanner(stdout)
-    inErr := bufio.NewScanner(stderr)
+	// read command's stdout line by line
+	in := bufio.NewScanner(stdout)
+	inErr := bufio.NewScanner(stderr)
 
-    for in.Scan() {
-        if debug == "true" {
-          tflog.Debug(ctx, in.Text())
-        } else {
-          tflog.Info(ctx, in.Text())
-        }
-    }
+	for in.Scan() {
+		if gitopsConfig.Debug == "true" {
+			tflog.Debug(ctx, in.Text())
+		} else {
+			tflog.Info(ctx, in.Text())
+		}
+	}
 
-    for inErr.Scan() {
-        tflog.Error(ctx, inErr.Text())
-    }
+	for inErr.Scan() {
+		tflog.Error(ctx, inErr.Text())
+	}
 
-    if err := cmd.Wait(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
+	if err := cmd.Wait(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
+		return "", err
+	}
 
-    if err := in.Err(); err != nil {
-        tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
-        return diag.FromErr(err)
-    }
+	if err := in.Err(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error processing stream: %s", fmt.Sprintln(err)))
+		return "", err
+	}
 
-	d.SetId("")
+	var id string
+	if delete {
+		id = ""
+	} else {
+		id = gitopsConfig.Namespace + ":" + gitopsConfig.Name + ":" + gitopsConfig.ServerName + ":" + gitopsConfig.Layer + ":" + gitopsConfig.Type
+	}
 
-	return diags
+	return id, nil
 }
