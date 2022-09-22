@@ -20,72 +20,72 @@ func resourceGitopsPullSecret() *schema.Resource {
 		UpdateContext: resourceGitopsPullSecretUpdate,
 		DeleteContext: resourceGitopsPullSecretDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"namespace": &schema.Schema{
+			"namespace": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"server_name": &schema.Schema{
+			"server_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "default",
 			},
-			"branch": &schema.Schema{
+			"branch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "main",
 			},
-			"layer": &schema.Schema{
+			"layer": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"infrastructure", "services", "applications"}, false),
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "base",
 				ValidateFunc: validation.StringInSlice([]string{"base", "instances", "operators"}, false),
 			},
-			"credentials": &schema.Schema{
+			"credentials": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 			},
-			"config": &schema.Schema{
+			"config": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kubeseal_cert": &schema.Schema{
+			"kubeseal_cert": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The certificate that will be used to encrypt the secret with kubeseal",
 			},
-			"registry_server": &schema.Schema{
+			"registry_server": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The host name of the server that will be stored in the pull secret",
 			},
-			"registry_username": &schema.Schema{
+			"registry_username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The username to the container registry that will be stored in the pull secret",
 			},
-			"registry_password": &schema.Schema{
+			"registry_password": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				Description: "The password to the container registry that will be stored in the pull secret",
 			},
-			"secret_name": &schema.Schema{
+			"secret_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				Description: "The name of the secret that will be created. If not provided the module name will be used",
 			},
-			"tmp_dir": &schema.Schema{
+			"tmp_dir": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  ".tmp/pull_secret",
@@ -255,11 +255,11 @@ func createSecret(ctx context.Context, binDir string, destDir string, fileName s
 		"docker-registry",
 		secretData.Name,
 		"--namespace", secretData.Namespace,
-		"--docker-server", secretData.Server,
-		"--docker-username", secretData.Username,
-		"--docker-password", secretData.Password,
-		"--dry-run", "client",
-		"--output", "json"}
+		"--docker-server=" + secretData.Server,
+		"--docker-username=" + secretData.Username,
+		"--docker-password=" + secretData.Password,
+		"--dry-run=client",
+		"--output=json"}
 
 	cmd := exec.Command(filepath.Join(binDir, "kubectl"), args...)
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
@@ -274,7 +274,11 @@ func createSecret(ctx context.Context, binDir string, destDir string, fileName s
 	if err != nil {
 		return "", err
 	}
-	defer outfilePipeIn.Close()
+	defer func() {
+		if tmpErr := outfilePipeIn.Close(); tmpErr != nil {
+			err = tmpErr
+		}
+	}()
 
 	cmd.Stdout = outfilePipeIn
 
@@ -298,5 +302,5 @@ func createSecret(ctx context.Context, binDir string, destDir string, fileName s
 		return "", err
 	}
 
-	return fileName, nil
+	return fileName, err
 }
