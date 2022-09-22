@@ -34,7 +34,7 @@ description: |-
 - `rules` (Block List) (see [below for nested schema](#nestedblock--rules))
 - `sccs` (List of String) The list of sccs that should be associated with the service account. Supports anyuid and/or privileged
 - `server_name` (String)
-- `service_account_name` (String)
+- `service_account_name` (String) The name of the service account that will be created. If not specified the value will default to the module name
 - `tmp_dir` (String) The temporary directory where config files are written before adding to gitops repo
 
 ### Read-Only
