@@ -38,8 +38,8 @@ done
 
 validate_gitops_ns_content "${NAMESPACE}" "${SERVER_NAME}"
 validate_gitops_ns_content "${NAMESPACE}" "${SERVER_NAME}" values.yaml
-validate_gitops_content "${NAMESPACE}" "test-rbac" "Chart.yaml" "1-infrastructure"
-validate_gitops_content "${NAMESPACE}" "test-rbac" "values.yaml" "1-infrastructure"
+validate_gitops_content "${NAMESPACE}" "test-rbac-sa" "Chart.yaml" "1-infrastructure"
+validate_gitops_content "${NAMESPACE}" "test-rbac-sa" "values.yaml" "1-infrastructure"
 validate_gitops_content "${NAMESPACE}" "test-secret" "pull-secret.yaml" "2-services"
 validate_gitops_content "${NAMESPACE}" "sonarqube" "values.yaml" "2-services"
 validate_gitops_content "${NAMESPACE}" "dashboard" "values.yaml" "2-services"
