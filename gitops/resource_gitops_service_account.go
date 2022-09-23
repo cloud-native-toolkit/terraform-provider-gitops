@@ -240,7 +240,7 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 		HelmConfig: &HelmConfig{
 			RepoUrl:      "https://charts.cloudnativetoolkit.dev",
 			Chart:        "service-account",
-			ChartVersion: "1.0.0",
+			ChartVersion: "1.0.1",
 		},
 	}
 
@@ -294,7 +294,7 @@ func resourceGitopsServiceAccountDelete(ctx context.Context, d *schema.ResourceD
 		HelmConfig: &HelmConfig{
 			RepoUrl:      "https://charts.cloudnativetoolkit.dev",
 			Chart:        "service-account",
-			ChartVersion: "1.0.0",
+			ChartVersion: "1.0.1",
 		},
 	}
 
