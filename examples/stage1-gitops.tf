@@ -17,7 +17,7 @@ resource gitops_repo repo {
   token = var.git_token
   public = true
   gitops_namespace = var.gitops_namespace
-#  sealed_secrets_cert = module.cert.cert
+  sealed_secrets_cert = ""
   strict = true
 }
 

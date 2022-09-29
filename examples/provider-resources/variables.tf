@@ -73,4 +73,5 @@ variable "namespace" {
 }
 
 variable "kubeseal_cert" {
+  default = ""
 }
