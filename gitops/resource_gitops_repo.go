@@ -407,12 +407,16 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
+	envNames := []string{"GIT_USERNAME", "GIT_TOKEN"}
+
 	updatedEnv := append(os.Environ(), "GIT_USERNAME="+config.Username)
 	updatedEnv = append(updatedEnv, "GIT_TOKEN="+config.Token)
 	if len(config.SealedSecretsCert) > 0 {
+		envNames = append(envNames, "KUBESEAL_CERT")
 		updatedEnv = append(updatedEnv, "KUBESEAL_CERT="+config.SealedSecretsCert)
 	}
 
+	tflog.Debug(ctx, fmt.Sprintf("Environment variables set: %s", envNames))
 	cmd.Env = updatedEnv
 
 	var outb, errb bytes.Buffer
