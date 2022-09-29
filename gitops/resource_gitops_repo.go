@@ -246,6 +246,8 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		id = fmt.Sprintf("%s/%s/%s:%s", gitopsRepoConfig.Host, gitopsRepoConfig.Org, gitopsRepoConfig.Repo, suffix)
 	}
 
+	tflog.Debug(ctx, fmt.Sprintf("Create result: %t, %s", result.Created, result.Url))
+
 	err = d.Set("created", result.Created)
 	if err != nil {
 		return diag.FromErr(err)
@@ -413,17 +415,26 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 
 	cmd.Env = updatedEnv
 
-	var outb bytes.Buffer
+	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
+	cmd.Stderr = &errb
 
 	// start the command after having set up the pipe
 	if err := cmd.Start(); err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error starting command: %s", fmt.Sprintln(err)))
+		tflog.Error(ctx, fmt.Sprintf("Command error log: %s", errb.String()))
 		return nil, err
 	}
 
 	if err := cmd.Wait(); err != nil {
 		tflog.Error(ctx, fmt.Sprintf("Error running command: %s", fmt.Sprintln(err)))
+		tflog.Error(ctx, fmt.Sprintf("Command error log: %s", errb.String()))
 		return nil, err
+	}
+
+	errText := errb.String()
+	if len(errText) > 0 {
+		tflog.Error(ctx, fmt.Sprintf("Command error log: %s", errText))
 	}
 
 	repoResult := GitopsRepoResult{}
