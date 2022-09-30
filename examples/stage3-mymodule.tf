@@ -1,4 +1,16 @@
 
+resource null_resource config {
+  provisioner "local-exec" {
+    command = "echo '${gitops_repo.repo.gitops_config}'"
+  }
+}
+
+resource null_resource credentials {
+  provisioner "local-exec" {
+    command = "echo '${nonsensitive(gitops_repo.repo.git_credentials)}'"
+  }
+}
+
 module sonarqube {
   source = "github.com/cloud-native-toolkit/terraform-gitops-sonarqube.git?ref=v1.3.0"
 
