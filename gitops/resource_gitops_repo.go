@@ -381,6 +381,7 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		"--branch", config.Branch,
 		"--serverName", config.ServerName,
 		"--tmpDir", config.TmpDir,
+		"--debug",
 	}
 
 	if len(config.Project) > 0 {
