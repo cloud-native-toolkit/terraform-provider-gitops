@@ -33,6 +33,7 @@ resource gitops_service_account test {
     resources = ["configmaps","secrets"]
     verbs = ["*"]
   }
+  pull_secrets = ["test"]
 }
 
 resource gitops_seal_secrets no_annotation {
