@@ -21,66 +21,75 @@ func resourceGitopsModule() *schema.Resource {
 		UpdateContext: resourceGitopsModuleUpdate,
 		DeleteContext: resourceGitopsModuleDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"namespace": &schema.Schema{
+			"namespace": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"content_dir": &schema.Schema{
+			"content_dir": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			"helm_repo_url": &schema.Schema{
+			"helm_repo_url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			"helm_chart": &schema.Schema{
+			"helm_chart": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			"helm_chart_version": &schema.Schema{
+			"helm_chart_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			"server_name": &schema.Schema{
+			"server_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "default",
 			},
-			"branch": &schema.Schema{
+			"branch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "main",
 			},
-			"layer": &schema.Schema{
+			"layer": {
 				Type:         schema.TypeString,
 				Required:     true,
+				Description:  "The GitOps layer where the configuration will be deployed (infrastructure, services, applications)",
 				ValidateFunc: validation.StringInSlice([]string{"infrastructure", "services", "applications"}, false),
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Description:  "The type of component added to the GitOps repo (base, instances, or operators)",
 				Default:      "base",
 				ValidateFunc: validation.StringInSlice([]string{"base", "instances", "operators"}, false),
 			},
-			"value_files": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+			"value_files": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Comma-separated list of value files that should be applied to the ArgoCD application if using a helm chart",
+				Default:     "",
 			},
-			"credentials": &schema.Schema{
+			"ignore_diff": {
+				Type:        schema.TypeString,
+				Description: "JSON string containing the ignoreDifferences block for the ArgoCD application",
+				Optional:    true,
+				Default:     "",
+			},
+			"credentials": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 			},
-			"config": &schema.Schema{
+			"config": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -107,6 +116,7 @@ func resourceGitopsModuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		Credentials: getCredentialsInput(d),
 		Config:      getGitopsConfigInput(d),
 		HelmConfig:  helmConfigFromResourceData(d),
+		IgnoreDiff:  getIgnoreDiffInput(d),
 	}
 
 	id, err := populateGitopsModule(ctx, config.BinDir, moduleConfig, false)
@@ -206,6 +216,9 @@ func populateGitopsModule(ctx context.Context, binDir string, gitopsConfig Gitop
 	}
 	if len(gitopsConfig.Debug) > 0 {
 		args = append(args, "--debug", gitopsConfig.Debug)
+	}
+	if len(gitopsConfig.IgnoreDiff) > 0 {
+		args = append(args, "--ignoreDiff", gitopsConfig.IgnoreDiff)
 	}
 
 	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)

@@ -242,6 +242,7 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 			Chart:        "service-account",
 			ChartVersion: "1.1.0",
 		},
+		IgnoreDiff: "[{\"jsonPointers\": [\"imagePullSecrets\", \"secrets\"], \"kind\": \"ServiceAccount\"}]",
 	}
 
 	id, err := populateGitopsModule(ctx, config.BinDir, moduleConfig, false)
