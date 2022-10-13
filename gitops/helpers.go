@@ -54,6 +54,10 @@ func getHelmChartVersionInput(d *schema.ResourceData) string {
 	return d.Get("helm_chart_version").(string)
 }
 
+func getIgnoreDiffInput(d *schema.ResourceData) string {
+	return d.Get("ignore_diff").(string)
+}
+
 type HelmConfig struct {
 	RepoUrl      string
 	Chart        string
@@ -91,6 +95,7 @@ type GitopsModuleConfig struct {
 	Debug       string
 	Credentials string
 	Config      string
+	IgnoreDiff  string
 }
 
 func interfacesToString(list []interface{}) []string {
