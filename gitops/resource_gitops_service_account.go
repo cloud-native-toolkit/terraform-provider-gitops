@@ -138,6 +138,12 @@ func resourceGitopsServiceAccount() *schema.Resource {
 					},
 				},
 			},
+			"pull_secrets": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of pull secrets that should be added as image pull secrets on the service account",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -162,6 +168,7 @@ type RBACValues struct {
 	Rules              []RBACRule `yaml:"rules"`
 	RbacNamespace      string     `yaml:"rbacNamespace"`
 	Name               string     `yaml:"name,omitempty"`
+	PullSecrets        []string   `yaml:"pullSecrets"`
 }
 
 func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -182,6 +189,7 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 	rbacNamespace := d.Get("rbac_namespace").(string)
 	serviceAccountName := d.Get("service_account_name").(string)
 	sccs := interfacesToString(d.Get("sccs").([]interface{}))
+	pullSecrets := interfacesToString(d.Get("pull_secrets").([]interface{}))
 	rules := getRBACRules(d, "rules")
 	roles := getRBACRoles(d, "roles")
 
@@ -200,6 +208,7 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 		Roles:              roles,
 		Rules:              rules,
 		Name:               serviceAccountName,
+		PullSecrets:        pullSecrets,
 	}
 
 	valueData, err := yaml.Marshal(&rbacValues)
@@ -240,7 +249,7 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 		HelmConfig: &HelmConfig{
 			RepoUrl:      "https://charts.cloudnativetoolkit.dev",
 			Chart:        "service-account",
-			ChartVersion: "1.1.0",
+			ChartVersion: "1.2.0",
 		},
 		IgnoreDiff: "[{\"jsonPointers\": [\"imagePullSecrets\", \"secrets\"], \"kind\": \"ServiceAccount\"}]",
 	}
@@ -295,7 +304,7 @@ func resourceGitopsServiceAccountDelete(ctx context.Context, d *schema.ResourceD
 		HelmConfig: &HelmConfig{
 			RepoUrl:      "https://charts.cloudnativetoolkit.dev",
 			Chart:        "service-account",
-			ChartVersion: "1.1.0",
+			ChartVersion: "1.2.0",
 		},
 	}
 
