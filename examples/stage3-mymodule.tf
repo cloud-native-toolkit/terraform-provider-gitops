@@ -17,7 +17,7 @@ module sonarqube {
   namespace       = module.cntk_namespace.name
   server_name     = gitops_repo.repo.server_name
   gitops_config   = local.gitops_config
-  git_credentials = jsondecode(gitops_repo.repo.git_credentials)
+  git_credentials = gitops_repo.repo.git_credentials
   kubeseal_cert   = gitops_repo.repo.sealed_secrets_cert
 }
 
@@ -27,5 +27,5 @@ module dashboard {
   namespace       = module.cntk_namespace.name
   server_name     = gitops_repo.repo.server_name
   gitops_config   = local.gitops_config
-  git_credentials = jsondecode(gitops_repo.repo.git_credentials)
+  git_credentials = gitops_repo.repo.git_credentials
 }
