@@ -128,6 +128,16 @@ func resourceGitopsRepo() *schema.Resource {
 				Description: "The configuration of the gitops repo(s) in json format",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"layer": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The layer for the configuration (bootstrap, infrastructure, services, or application)",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The type of the configuration (argocd or payload).",
+						},
 						"repo": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -138,15 +148,15 @@ func resourceGitopsRepo() *schema.Resource {
 							Required:    true,
 							Description: "The url to the git repository",
 						},
-						"username": {
+						"path": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "The username for the git repository",
+							Description: "The path to the configuration in the git repository",
 						},
-						"token": {
+						"project": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The token for the git repository",
+							Optional:    true,
+							Description: "The project name for the ArgoCD application",
 						},
 					},
 				},
@@ -215,6 +225,15 @@ type PayloadConfig struct {
 	Repo string `yaml:"repo" json:"repo"`
 	Url  string `yaml:"url" json:"url"`
 	Path string `yaml:"path" json:"path"`
+}
+
+type GitopsConfigEntry struct {
+	Layer   string `yaml:"layer" json:"layer"`
+	Type    string `yaml:"type" json:"type"`
+	Project string `yaml:"project,omitempty" json:"project,omitempty"`
+	Repo    string `yaml:"repo" json:"repo"`
+	Url     string `yaml:"url" json:"url"`
+	Path    string `yaml:"path" json:"path"`
 }
 
 type BootstrapConfig struct {
@@ -316,11 +335,13 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	gitopsConfigJson, err := toJson(result.GitopsConfig)
+	gitopsConfigEntries := gitopsConfigToConfigEntries(result.GitopsConfig)
+
+	gitopsConfigEntriesJson, err := toJson(gitopsConfigEntries)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("gitops_config", gitopsConfigJson)
+	err = d.Set("gitops_config", gitopsConfigEntriesJson)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -514,4 +535,64 @@ func toJson(value interface{}) (string, error) {
 	result, err := json.Marshal(value)
 
 	return string(result), err
+}
+
+func gitopsConfigToConfigEntries(value GitopsConfigResult) []GitopsConfigEntry {
+	result := make([]GitopsConfigEntry, 7)
+
+	result[0] = GitopsConfigEntry{
+		Layer:   "bootstrap",
+		Type:    "argocd",
+		Project: value.Bootstrap.ArgocdConfig.Project,
+		Repo:    value.Bootstrap.ArgocdConfig.Repo,
+		Url:     value.Bootstrap.ArgocdConfig.Url,
+		Path:    value.Bootstrap.ArgocdConfig.Path,
+	}
+	result[1] = GitopsConfigEntry{
+		Layer:   "infrastucture",
+		Type:    "argocd",
+		Project: value.Infrastructure.ArgocdConfig.Project,
+		Repo:    value.Infrastructure.ArgocdConfig.Repo,
+		Url:     value.Infrastructure.ArgocdConfig.Url,
+		Path:    value.Infrastructure.ArgocdConfig.Path,
+	}
+	result[2] = GitopsConfigEntry{
+		Layer: "infrastucture",
+		Type:  "payload",
+		Repo:  value.Infrastructure.Payload.Repo,
+		Url:   value.Infrastructure.Payload.Url,
+		Path:  value.Infrastructure.Payload.Path,
+	}
+	result[3] = GitopsConfigEntry{
+		Layer:   "services",
+		Type:    "argocd",
+		Project: value.Services.ArgocdConfig.Project,
+		Repo:    value.Services.ArgocdConfig.Repo,
+		Url:     value.Services.ArgocdConfig.Url,
+		Path:    value.Services.ArgocdConfig.Path,
+	}
+	result[4] = GitopsConfigEntry{
+		Layer: "services",
+		Type:  "payload",
+		Repo:  value.Services.Payload.Repo,
+		Url:   value.Services.Payload.Url,
+		Path:  value.Services.Payload.Path,
+	}
+	result[5] = GitopsConfigEntry{
+		Layer:   "applications",
+		Type:    "argocd",
+		Project: value.Applications.ArgocdConfig.Project,
+		Repo:    value.Applications.ArgocdConfig.Repo,
+		Url:     value.Applications.ArgocdConfig.Url,
+		Path:    value.Applications.ArgocdConfig.Path,
+	}
+	result[6] = GitopsConfigEntry{
+		Layer: "applications",
+		Type:  "payload",
+		Repo:  value.Applications.Payload.Repo,
+		Url:   value.Applications.Payload.Url,
+		Path:  value.Applications.Payload.Path,
+	}
+
+	return result
 }

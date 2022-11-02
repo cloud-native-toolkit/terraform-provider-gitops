@@ -7,6 +7,24 @@ resource random_string suffix {
 
 locals {
   repo_name = "${var.git_repo}-${random_string.suffix.result}"
+  gitops_entries = jsondecode(gitops_repo.repo.gitops_config)
+  gitops_config = {
+    bootstrap = {
+      "argocd-config" = local.gitops_entries["bootstrap"]["argocd"]
+    }
+    infrastructure = {
+      "argocd-config" = local.gitops_entries["infrastructure"]["argocd"]
+      payload = local.gitops_entries["infrastructure"]["payload"]
+    }
+    services = {
+      "argocd-config" = local.gitops_entries["services"]["argocd"]
+      payload = local.gitops_entries["services"]["payload"]
+    }
+    applications = {
+      "argocd-config" = local.gitops_entries["applications"]["argocd"]
+      payload = local.gitops_entries["applications"]["payload"]
+    }
+  }
 }
 
 resource gitops_repo repo {
