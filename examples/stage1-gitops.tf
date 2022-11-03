@@ -10,22 +10,22 @@ locals {
   gitops_entries = gitops_repo.repo.gitops_config
   gitops_config = {
     boostrap = {
-      "argocd-config" = local.gitops_entries["bootstrap"]["argocd"]
+      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "bootstrap" && o.type == "argocd"][0]
     }
     bootstrap = {
-      "argocd-config" = local.gitops_entries["bootstrap"]["argocd"]
+      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "bootstrap" && o.type == "argocd"][0]
     }
     infrastructure = {
-      "argocd-config" = local.gitops_entries["infrastructure"]["argocd"]
-      payload = local.gitops_entries["infrastructure"]["payload"]
+      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "infrastructure" && o.type == "argocd"][0]
+      payload = [for o in local.gitops_entries : o if o.layer == "infrastructure" && o.type == "payload"][0]
     }
     services = {
-      "argocd-config" = local.gitops_entries["services"]["argocd"]
-      payload = local.gitops_entries["services"]["payload"]
+      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "services" && o.type == "argocd"][0]
+      payload = [for o in local.gitops_entries : o if o.layer == "services" && o.type == "payload"][0]
     }
     applications = {
-      "argocd-config" = local.gitops_entries["applications"]["argocd"]
-      payload = local.gitops_entries["applications"]["payload"]
+      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "applications" && o.type == "argocd"][0]
+      payload = [for o in local.gitops_entries : o if o.layer == "applications" && o.type == "payload"][0]
     }
   }
 }
