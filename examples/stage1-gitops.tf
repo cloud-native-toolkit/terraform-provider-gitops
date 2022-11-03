@@ -7,27 +7,6 @@ resource random_string suffix {
 
 locals {
   repo_name = "${var.git_repo}-${random_string.suffix.result}"
-  gitops_entries = gitops_repo.repo.gitops_config
-  gitops_config = {
-    boostrap = {
-      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "bootstrap" && o.type == "argocd"][0]
-    }
-    bootstrap = {
-      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "bootstrap" && o.type == "argocd"][0]
-    }
-    infrastructure = {
-      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "infrastructure" && o.type == "argocd"][0]
-      payload = [for o in local.gitops_entries : o if o.layer == "infrastructure" && o.type == "payload"][0]
-    }
-    services = {
-      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "services" && o.type == "argocd"][0]
-      payload = [for o in local.gitops_entries : o if o.layer == "services" && o.type == "payload"][0]
-    }
-    applications = {
-      "argocd-config" = [for o in local.gitops_entries : o if o.layer == "applications" && o.type == "argocd"][0]
-      payload = [for o in local.gitops_entries : o if o.layer == "applications" && o.type == "payload"][0]
-    }
-  }
 }
 
 resource gitops_repo repo {

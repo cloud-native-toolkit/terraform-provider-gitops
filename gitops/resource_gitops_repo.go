@@ -123,73 +123,15 @@ func resourceGitopsRepo() *schema.Resource {
 				Description: "The repo slug of the created repository (i.e. url without the protocol).",
 			},
 			"gitops_config": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The configuration of the gitops repo(s) in json format",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"layer": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The layer for the configuration (bootstrap, infrastructure, services, or application)",
-						},
-						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The type of the configuration (argocd or payload).",
-						},
-						"repo": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The repo slug with the git host",
-						},
-						"url": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The url to the git repository",
-						},
-						"path": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The path to the configuration in the git repository",
-						},
-						"project": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The project name for the ArgoCD application",
-						},
-					},
-				},
 			},
 			"git_credentials": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The git credentials for the gitops repo(s) in json format",
 				Sensitive:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"repo": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The repo slug with the git host",
-						},
-						"url": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The url to the git repository",
-						},
-						"username": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The username for the git repository",
-						},
-						"token": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The token for the git repository",
-						},
-					},
-				},
 			},
 		},
 	}
@@ -247,6 +189,7 @@ type LayerConfig struct {
 
 type GitopsConfigResult struct {
 	Bootstrap      BootstrapConfig `yaml:"bootstrap" json:"bootstrap"`
+	Boostrap       BootstrapConfig `yaml:"boostrap" json:"boostrap"`
 	Infrastructure LayerConfig     `yaml:"infrastructure" json:"infrastructure"`
 	Services       LayerConfig     `yaml:"services" json:"services"`
 	Applications   LayerConfig     `yaml:"applications" json:"applications"`
@@ -335,13 +278,11 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	gitopsConfigEntries := gitopsConfigToConfigEntries(result.GitopsConfig)
-
-	gitopsConfigEntriesJson, err := toJson(gitopsConfigEntries)
+	gitopsConfigJson, err := toJson(result.GitopsConfig)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("gitops_config", gitopsConfigEntriesJson)
+	err = d.Set("gitops_config", gitopsConfigJson)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -515,6 +456,8 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 	if err != nil {
 		return nil, err
 	}
+
+	repoResult.GitopsConfig.Boostrap = repoResult.GitopsConfig.Bootstrap
 
 	return &repoResult, nil
 }
