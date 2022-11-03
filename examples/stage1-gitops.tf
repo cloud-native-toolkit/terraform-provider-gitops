@@ -7,7 +7,7 @@ resource random_string suffix {
 
 locals {
   repo_name = "${var.git_repo}-${random_string.suffix.result}"
-  gitops_entries = jsondecode(gitops_repo.repo.gitops_config)
+  gitops_entries = gitops_repo.repo.gitops_config
   gitops_config = {
     boostrap = {
       "argocd-config" = local.gitops_entries["bootstrap"]["argocd"]
