@@ -451,7 +451,7 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		tflog.Error(ctx, fmt.Sprintf("Command error log: %s", errText))
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Result from gitops repo: %s", outb.String()))
+	tflog.Debug(ctx, fmt.Sprintf("JSON result from gitops repo: %s", outb.String()))
 
 	repoResult := GitopsRepoResult{}
 	err := json.Unmarshal(outb.Bytes(), &repoResult)
@@ -460,6 +460,8 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 	}
 
 	repoResult.GitopsConfig.Boostrap = repoResult.GitopsConfig.Bootstrap
+
+	tflog.Debug(ctx, fmt.Sprintf("Result values from gitops repo: %s, %s", repoResult.Repo, repoResult.GitopsConfig.Bootstrap.ArgocdConfig.Project))
 
 	return &repoResult, nil
 }
