@@ -14,8 +14,8 @@ resource gitops_namespace ns {
   dev_namespace = local.ci
   server_name = var.server_name
   branch = local.application_branch
-  config = yamlencode(var.gitops_config)
-  credentials = yamlencode(var.git_credentials)
+  config = var.gitops_config
+  credentials = var.git_credentials
 }
 
 resource gitops_service_account test {
@@ -23,8 +23,8 @@ resource gitops_service_account test {
   namespace = gitops_namespace.ns.name
   server_name = var.server_name
   branch = local.application_branch
-  config = yamlencode(var.gitops_config)
-  credentials = yamlencode(var.git_credentials)
+  config = var.gitops_config
+  credentials = var.git_credentials
   roles {
     name = "cluster-admin"
   }
@@ -61,8 +61,8 @@ resource gitops_pull_secret test {
   server_name = var.server_name
   branch = local.application_branch
   layer = "services"
-  credentials = yamlencode(var.git_credentials)
-  config = yamlencode(var.gitops_config)
+  credentials = var.git_credentials
+  config = var.gitops_config
   kubeseal_cert = var.kubeseal_cert
   registry_server = "quay.io"
   registry_username = "myuser"

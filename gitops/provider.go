@@ -16,43 +16,44 @@ var gitopsMutexKV = mutexkv.NewMutexKV()
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("GIT_USERNAME", nil),
 			},
-			"token": &schema.Schema{
+			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("GIT_TOKEN", nil),
 			},
-			"bin_dir": &schema.Schema{
+			"bin_dir": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"lock": &schema.Schema{
+			"lock": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("GITOPS_LOCK", "branch"),
 			},
-			"debug": &schema.Schema{
+			"debug": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("GITOPS_DEBUG", "false"),
 			},
-			"ca_cert": &schema.Schema{
+			"ca_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("GITOPS_CA_CERT", ""),
 			},
-			"ca_cert_file": &schema.Schema{
+			"ca_cert_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("GITOPS_CA_CERT_FILE", ""),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"gitops_repo":            resourceGitopsRepo(),
 			"gitops_namespace":       resourceGitopsNamespace(),
 			"gitops_module":          resourceGitopsModule(),
 			"gitops_service_account": resourceGitopsServiceAccount(),
