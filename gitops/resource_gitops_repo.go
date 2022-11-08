@@ -200,8 +200,8 @@ type GitopsRepoResult struct {
 	Repo         string             `yaml:"repo" json:"repo"`
 	Created      bool               `yaml:"created" json:"created"`
 	Initialized  bool               `yaml:"initialized" json:"initialized"`
-	GitopsConfig GitopsConfigResult `yaml:"gitops_config" json:"gitops_config"`
-	KubesealCert string             `yaml:"kubeseal_cert" json:"kubeseal_cert"`
+	GitopsConfig GitopsConfigResult `yaml:"gitopsConfig" json:"gitopsConfig"`
+	KubesealCert string             `yaml:"kubesealCert" json:"kubesealCert"`
 }
 
 type GitCredential struct {
