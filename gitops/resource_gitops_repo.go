@@ -374,11 +374,11 @@ func resourceGitopsRepoDelete(ctx context.Context, d *schema.ResourceData, m int
 func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool) (*GitopsRepoResult, error) {
 
 	// this should be replaced with the actual git user
-	username := "cloudnativetoolkit"
+	mutexKey := fmt.Sprintf("%s/%s/%s:%s", config.Host, config.Org, config.Repo, config.Project)
 
-	gitopsMutexKV.Lock(username)
+	gitopsMutexKV.Lock(mutexKey)
 
-	defer gitopsMutexKV.Unlock(username)
+	defer gitopsMutexKV.Unlock(mutexKey)
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops repo: host=%s, org=%s, project=%s, repo=%s", config.Host, config.Org, config.Project, config.Repo))
 
