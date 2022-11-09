@@ -219,24 +219,28 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	config := m.(*ProviderConfig)
 
-	caCertFile := d.Get("ca_cert_file").(string)
-	if len(caCertFile) == 0 {
-		caCertFile = config.CaCertFile
+	gitConfig, err := loadGitConfigValues(ctx, d, "")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if !isValidGitConfig(gitConfig) {
+		gitConfig = config.GitConfig
 	}
 
 	gitopsRepoConfig := GitopsRepoConfig{
-		Host:              d.Get("host").(string),
-		Org:               d.Get("org").(string),
-		Project:           d.Get("project").(string),
-		Repo:              d.Get("repo").(string),
-		Username:          d.Get("username").(string),
-		Token:             d.Get("token").(string),
-		Branch:            d.Get("branch").(string),
-		ServerName:        d.Get("server_name").(string),
+		Host:              gitConfig.Host,
+		Org:               gitConfig.Org,
+		Project:           gitConfig.Project,
+		Username:          gitConfig.Username,
+		Token:             gitConfig.Token,
+		CaCertFile:        gitConfig.CaCertFile,
+		Repo:              getResourceValue(d, "repo", config.Repo),
+		Branch:            getResourceValue(d, "branch", config.Branch),
+		ServerName:        getResourceValue(d, "server_name", config.ServerName),
+		Public:            d.Get("public").(bool) || config.Public,
 		GitopsNamespace:   d.Get("gitops_namespace").(string),
-		CaCertFile:        caCertFile,
 		SealedSecretsCert: d.Get("sealed_secrets_cert").(string),
-		Public:            d.Get("public").(bool),
 		Strict:            d.Get("strict").(bool),
 		TmpDir:            d.Get("tmp_dir").(string),
 		BinDir:            config.BinDir,
@@ -302,6 +306,21 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	if len(gitConfig.CaCertFile) != 0 {
+		err = d.Set("ca_cert_file", gitConfig.CaCertFile)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		dat, err := os.ReadFile(gitConfig.CaCertFile)
+		if err == nil {
+			err = d.Set("ca_cert", string(dat))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
 	d.SetId(id)
 
 	return diags
@@ -339,29 +358,34 @@ func resourceGitopsRepoDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	tflog.Info(ctx, "Deleting gitops repo")
 
-	caCertFile := d.Get("ca_cert_file").(string)
-	if len(caCertFile) == 0 {
-		caCertFile = config.CaCertFile
+	gitConfig, err := loadGitConfigValues(ctx, d, "")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if !isValidGitConfig(gitConfig) {
+		gitConfig = config.GitConfig
 	}
 
 	gitopsRepoConfig := GitopsRepoConfig{
-		Host:              d.Get("host").(string),
-		Org:               d.Get("org").(string),
-		Project:           d.Get("project").(string),
-		Repo:              d.Get("repo").(string),
-		Username:          d.Get("username").(string),
-		Token:             d.Get("token").(string),
-		Branch:            d.Get("branch").(string),
-		ServerName:        d.Get("server_name").(string),
-		CaCertFile:        caCertFile,
+		Host:              gitConfig.Host,
+		Org:               gitConfig.Org,
+		Project:           gitConfig.Project,
+		Username:          gitConfig.Username,
+		Token:             gitConfig.Token,
+		CaCertFile:        gitConfig.CaCertFile,
+		Repo:              getResourceValue(d, "repo", config.Repo),
+		Branch:            getResourceValue(d, "branch", config.Branch),
+		ServerName:        getResourceValue(d, "server_name", config.ServerName),
+		Public:            d.Get("public").(bool) || config.Public,
+		GitopsNamespace:   d.Get("gitops_namespace").(string),
 		SealedSecretsCert: d.Get("sealed_secrets_cert").(string),
-		Public:            d.Get("public").(bool),
 		Strict:            d.Get("strict").(bool),
 		TmpDir:            d.Get("tmp_dir").(string),
 		BinDir:            config.BinDir,
 	}
 
-	_, err := processGitopsRepo(ctx, gitopsRepoConfig, true)
+	_, err = processGitopsRepo(ctx, gitopsRepoConfig, true)
 	if err != nil {
 		return diag.FromErr(err)
 	}
