@@ -252,9 +252,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	lock := d.Get("lock").(string)
 	debug := d.Get("debug").(string)
 
-	repo := d.Get("repo").(string)
-	branch := d.Get("branch").(string)
-	serverName := d.Get("server_name").(string)
+	repo := getResourceValue(d, "repo", "")
+	branch := getResourceValue(d, "branch", "main")
+	serverName := getResourceValue(d, "server_name", "default")
 	public := d.Get("public").(bool)
 
 	// Warning or errors can be collected in a slice type
