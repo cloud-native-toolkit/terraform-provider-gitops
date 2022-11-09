@@ -38,5 +38,5 @@ resource local_file git_repo {
 resource local_file git_token {
   filename = "${path.cwd}/.git_token"
 
-  content = gitops_repo.repo.token
+  content = var.git_token
 }

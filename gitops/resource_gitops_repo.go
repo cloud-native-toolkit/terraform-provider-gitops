@@ -26,11 +26,13 @@ func resourceGitopsRepo() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The host name of the git server.",
+				Default:     "",
 			},
 			"org": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The org/group where the git repository exists/will be provisioned.",
+				Default:     "",
 			},
 			"project": {
 				Type:        schema.TypeString,
@@ -42,17 +44,20 @@ func resourceGitopsRepo() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The short name of the repository (i.e. the part after the org/group name).",
+				Default:     "",
 			},
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The username of the user with access to the repository.",
+				Default:     "",
 			},
 			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "The token/password used to authenticate the user to the git server.",
+				Default:     "",
 			},
 			"branch": {
 				Type:        schema.TypeString,
@@ -445,6 +450,10 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 	defer gitopsMutexKV.Unlock(mutexKey)
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops repo: host=%s, org=%s, project=%s, repo=%s", config.Host, config.Org, config.Project, config.Repo))
+
+	if len(config.Repo) == 0 {
+		return nil, errors.New("repo name must be provided")
+	}
 
 	var args = []string{
 		"gitops-init",
