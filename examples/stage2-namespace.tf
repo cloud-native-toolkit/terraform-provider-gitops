@@ -3,7 +3,7 @@ module cntk_namespace {
   source = "./provider-resources"
 
   namespace       = "provider-test"
-  server_name     = gitops_repo.repo.server_name
+  server_name     = gitops_repo.repo.result_server_name
   gitops_config = gitops_repo.repo.gitops_config
   git_credentials = gitops_repo.repo.git_credentials
   kubeseal_cert   = gitops_repo.repo.sealed_secrets_cert

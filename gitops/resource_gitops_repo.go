@@ -71,12 +71,6 @@ func resourceGitopsRepo() *schema.Resource {
 				Description: "The name of the cluster that will be configured via gitops.",
 				Default:     "",
 			},
-			"gitops_namespace": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The namespace where ArgoCD is running in the cluster.",
-				Default:     "openshift-gitops",
-			},
 			"ca_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -88,6 +82,12 @@ func resourceGitopsRepo() *schema.Resource {
 				Optional:    true,
 				Description: "Name of the file containing the ca certificate for SSL connections.",
 				Default:     "",
+			},
+			"gitops_namespace": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The namespace where ArgoCD is running in the cluster.",
+				Default:     "openshift-gitops",
 			},
 			"sealed_secrets_cert": {
 				Type:        schema.TypeString,
@@ -138,6 +138,26 @@ func resourceGitopsRepo() *schema.Resource {
 				Computed:    true,
 				Description: "The git credentials for the gitops repo(s) in json format",
 				Sensitive:   true,
+			},
+			"result_branch": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The project that will be used for the git repo.",
+			},
+			"result_server_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the cluster that will be configured via gitops.",
+			},
+			"result_ca_cert": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ca certificate for SSL connections.",
+			},
+			"result_ca_cert_file": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the file containing the ca certificate for SSL connections.",
 			},
 		},
 	}
@@ -287,41 +307,6 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("host", gitopsRepoConfig.Host)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("org", gitopsRepoConfig.Org)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("project", gitopsRepoConfig.Project)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("repo", gitopsRepoConfig.Repo)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("branch", gitopsRepoConfig.Branch)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("server_name", "default")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = d.Set("public", gitopsRepoConfig.Public)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	err = d.Set("sealed_secrets_cert", result.KubesealCert)
 	if err != nil {
 		return diag.FromErr(err)
@@ -351,18 +336,26 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	if len(gitConfig.CaCertFile) != 0 {
-		err = d.Set("ca_cert_file", gitConfig.CaCertFile)
+	err = d.Set("result_branch", gitopsRepoConfig.Branch)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_server_name", "default")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_ca_cert_file", gitConfig.CaCertFile)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	dat, err := os.ReadFile(gitConfig.CaCertFile)
+	if err == nil {
+		err = d.Set("result_ca_cert", string(dat))
 		if err != nil {
 			return diag.FromErr(err)
-		}
-
-		dat, err := os.ReadFile(gitConfig.CaCertFile)
-		if err == nil {
-			err = d.Set("ca_cert", string(dat))
-			if err != nil {
-				return diag.FromErr(err)
-			}
 		}
 	}
 
