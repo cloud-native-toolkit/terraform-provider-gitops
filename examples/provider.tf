@@ -10,6 +10,7 @@ provider "gitops" {
   repo = local.repo_name
   username = var.git_username
   token = var.git_token
+  server_name = "default"
   public = true
 }
 
