@@ -133,7 +133,7 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
-	caCert := config.CaCertFile
+	caCert := config.GitConfig.CaCertFile
 
 	// this should be replaced with the actual git user
 	username := "cloudnativetoolkit"
@@ -273,7 +273,7 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 	binDir := config.BinDir
 	lock := config.Lock
 	debug := config.Debug
-	caCert := config.CaCertFile
+	caCert := config.GitConfig.CaCertFile
 
 	username := "cloudnativetoolkit"
 
