@@ -312,7 +312,7 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("server_name", gitopsRepoConfig.ServerName)
+	err = d.Set("server_name", "default")
 	if err != nil {
 		return diag.FromErr(err)
 	}
