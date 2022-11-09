@@ -385,7 +385,7 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 	var args = []string{
 		"gitops-init",
 		config.Repo,
-		"--output", "json",
+		"--output", "jsonfile=./output.json",
 		"--host", config.Host,
 		"--org", config.Org,
 		"--branch", config.Branch,
@@ -446,15 +446,25 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		return nil, err
 	}
 
+	outText := outb.String()
+	if len(outText) > 0 {
+		tflog.Debug(ctx, fmt.Sprintf("Command standard log: %s", outText))
+	}
+
 	errText := errb.String()
 	if len(errText) > 0 {
 		tflog.Error(ctx, fmt.Sprintf("Command error log: %s", errText))
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("JSON result from gitops repo: %s", outb.String()))
+	dat, err := os.ReadFile("./output.json")
+	if err != nil {
+		return nil, err
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("JSON result from gitops repo: %s", string(dat)))
 
 	repoResult := GitopsRepoResult{}
-	err := json.Unmarshal(outb.Bytes(), &repoResult)
+	err = json.Unmarshal(dat, &repoResult)
 	if err != nil {
 		return nil, err
 	}
