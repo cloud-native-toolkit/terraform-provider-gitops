@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,12 +24,12 @@ func resourceGitopsRepo() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"host": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The host name of the git server.",
 			},
 			"org": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The org/group where the git repository exists/will be provisioned.",
 			},
 			"project": {
@@ -39,17 +40,17 @@ func resourceGitopsRepo() *schema.Resource {
 			},
 			"repo": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The short name of the repository (i.e. the part after the org/group name).",
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The username of the user with access to the repository.",
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "The token/password used to authenticate the user to the git server.",
 			},
@@ -57,13 +58,13 @@ func resourceGitopsRepo() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The project that will be used for the git repo.",
-				Default:     "main",
+				Default:     "",
 			},
 			"server_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The name of the cluster that will be configured via gitops.",
-				Default:     "default",
+				Default:     "",
 			},
 			"gitops_namespace": {
 				Type:        schema.TypeString,
@@ -226,6 +227,10 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	if !isValidGitConfig(gitConfig) {
 		gitConfig = config.GitConfig
+	}
+
+	if !isValidGitConfig(gitConfig) {
+		return diag.FromErr(errors.New("host, username, and/or token values not provided"))
 	}
 
 	gitopsRepoConfig := GitopsRepoConfig{
