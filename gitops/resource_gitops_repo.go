@@ -282,6 +282,41 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	err = d.Set("host", gitopsRepoConfig.Host)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("org", gitopsRepoConfig.Org)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("project", gitopsRepoConfig.Project)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("repo", gitopsRepoConfig.Repo)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("branch", gitopsRepoConfig.Branch)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("server_name", gitopsRepoConfig.ServerName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("public", gitopsRepoConfig.Public)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	err = d.Set("sealed_secrets_cert", result.KubesealCert)
 	if err != nil {
 		return diag.FromErr(err)
