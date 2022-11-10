@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,13 +24,15 @@ func resourceGitopsRepo() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"host": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The host name of the git server.",
+				Default:     "",
 			},
 			"org": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The org/group where the git repository exists/will be provisioned.",
+				Default:     "",
 			},
 			"project": {
 				Type:        schema.TypeString,
@@ -39,37 +42,34 @@ func resourceGitopsRepo() *schema.Resource {
 			},
 			"repo": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The short name of the repository (i.e. the part after the org/group name).",
+				Default:     "",
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The username of the user with access to the repository.",
+				Default:     "",
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "The token/password used to authenticate the user to the git server.",
+				Default:     "",
 			},
 			"branch": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The project that will be used for the git repo.",
-				Default:     "main",
+				Default:     "",
 			},
 			"server_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The name of the cluster that will be configured via gitops.",
-				Default:     "default",
-			},
-			"gitops_namespace": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The namespace where ArgoCD is running in the cluster.",
-				Default:     "openshift-gitops",
+				Default:     "",
 			},
 			"ca_cert": {
 				Type:        schema.TypeString,
@@ -82,6 +82,12 @@ func resourceGitopsRepo() *schema.Resource {
 				Optional:    true,
 				Description: "Name of the file containing the ca certificate for SSL connections.",
 				Default:     "",
+			},
+			"gitops_namespace": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The namespace where ArgoCD is running in the cluster.",
+				Default:     "openshift-gitops",
 			},
 			"sealed_secrets_cert": {
 				Type:        schema.TypeString,
@@ -132,6 +138,26 @@ func resourceGitopsRepo() *schema.Resource {
 				Computed:    true,
 				Description: "The git credentials for the gitops repo(s) in json format",
 				Sensitive:   true,
+			},
+			"result_branch": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The project that will be used for the git repo.",
+			},
+			"result_server_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the cluster that will be configured via gitops.",
+			},
+			"result_ca_cert": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ca certificate for SSL connections.",
+			},
+			"result_ca_cert_file": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the file containing the ca certificate for SSL connections.",
 			},
 		},
 	}
@@ -219,24 +245,32 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	config := m.(*ProviderConfig)
 
-	caCertFile := d.Get("ca_cert_file").(string)
-	if len(caCertFile) == 0 {
-		caCertFile = config.CaCertFile
+	gitConfig, err := loadGitConfigValues(ctx, d, "")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if !isValidGitConfig(gitConfig) {
+		gitConfig = config.GitConfig
+	}
+
+	if !isValidGitConfig(gitConfig) {
+		return diag.FromErr(errors.New("host, username, and/or token values not provided"))
 	}
 
 	gitopsRepoConfig := GitopsRepoConfig{
-		Host:              d.Get("host").(string),
-		Org:               d.Get("org").(string),
-		Project:           d.Get("project").(string),
-		Repo:              d.Get("repo").(string),
-		Username:          d.Get("username").(string),
-		Token:             d.Get("token").(string),
-		Branch:            d.Get("branch").(string),
-		ServerName:        d.Get("server_name").(string),
+		Host:              gitConfig.Host,
+		Org:               gitConfig.Org,
+		Project:           gitConfig.Project,
+		Username:          gitConfig.Username,
+		Token:             gitConfig.Token,
+		CaCertFile:        gitConfig.CaCertFile,
+		Repo:              getResourceValue(d, "repo", config.Repo),
+		Branch:            getResourceValue(d, "branch", config.Branch),
+		ServerName:        getResourceValue(d, "server_name", config.ServerName),
+		Public:            d.Get("public").(bool) || config.Public,
 		GitopsNamespace:   d.Get("gitops_namespace").(string),
-		CaCertFile:        caCertFile,
 		SealedSecretsCert: d.Get("sealed_secrets_cert").(string),
-		Public:            d.Get("public").(bool),
 		Strict:            d.Get("strict").(bool),
 		TmpDir:            d.Get("tmp_dir").(string),
 		BinDir:            config.BinDir,
@@ -302,6 +336,29 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	err = d.Set("result_branch", gitopsRepoConfig.Branch)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_server_name", "default")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_ca_cert_file", gitConfig.CaCertFile)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	dat, err := os.ReadFile(gitConfig.CaCertFile)
+	if err == nil {
+		err = d.Set("result_ca_cert", string(dat))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.SetId(id)
 
 	return diags
@@ -339,29 +396,34 @@ func resourceGitopsRepoDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	tflog.Info(ctx, "Deleting gitops repo")
 
-	caCertFile := d.Get("ca_cert_file").(string)
-	if len(caCertFile) == 0 {
-		caCertFile = config.CaCertFile
+	gitConfig, err := loadGitConfigValues(ctx, d, "")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if !isValidGitConfig(gitConfig) {
+		gitConfig = config.GitConfig
 	}
 
 	gitopsRepoConfig := GitopsRepoConfig{
-		Host:              d.Get("host").(string),
-		Org:               d.Get("org").(string),
-		Project:           d.Get("project").(string),
-		Repo:              d.Get("repo").(string),
-		Username:          d.Get("username").(string),
-		Token:             d.Get("token").(string),
-		Branch:            d.Get("branch").(string),
-		ServerName:        d.Get("server_name").(string),
-		CaCertFile:        caCertFile,
+		Host:              gitConfig.Host,
+		Org:               gitConfig.Org,
+		Project:           gitConfig.Project,
+		Username:          gitConfig.Username,
+		Token:             gitConfig.Token,
+		CaCertFile:        gitConfig.CaCertFile,
+		Repo:              getResourceValue(d, "repo", config.Repo),
+		Branch:            getResourceValue(d, "branch", config.Branch),
+		ServerName:        getResourceValue(d, "server_name", config.ServerName),
+		Public:            d.Get("public").(bool) || config.Public,
+		GitopsNamespace:   d.Get("gitops_namespace").(string),
 		SealedSecretsCert: d.Get("sealed_secrets_cert").(string),
-		Public:            d.Get("public").(bool),
 		Strict:            d.Get("strict").(bool),
 		TmpDir:            d.Get("tmp_dir").(string),
 		BinDir:            config.BinDir,
 	}
 
-	_, err := processGitopsRepo(ctx, gitopsRepoConfig, true)
+	_, err = processGitopsRepo(ctx, gitopsRepoConfig, true)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -381,6 +443,10 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 	defer gitopsMutexKV.Unlock(mutexKey)
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops repo: host=%s, org=%s, project=%s, repo=%s", config.Host, config.Org, config.Project, config.Repo))
+
+	if len(config.Repo) == 0 {
+		return nil, errors.New("repo name must be provided")
+	}
 
 	var args = []string{
 		"gitops-init",
