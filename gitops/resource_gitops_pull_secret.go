@@ -3,6 +3,7 @@ package gitops
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -88,7 +89,7 @@ func resourceGitopsPullSecret() *schema.Resource {
 			"tmp_dir": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  ".tmp/pull_secret",
+				Default:  "",
 			},
 		},
 	}
@@ -107,12 +108,15 @@ func resourceGitopsPullSecretCreate(ctx context.Context, d *schema.ResourceData,
 
 	config := m.(*ProviderConfig)
 
-	name := getNameInput(d)
 	namespace := getNamespaceInput(d)
+	name := getNameInput(d)
 
 	cert := d.Get("kubeseal_cert").(string)
 	secretName := d.Get("secret_name").(string)
 	tmpDir := d.Get("tmp_dir").(string)
+	if len(tmpDir) == 0 {
+		tmpDir = fmt.Sprintf(".tmp/pull_secret/%s/%s", namespace, name)
+	}
 
 	binDir := config.BinDir
 
@@ -191,6 +195,9 @@ func resourceGitopsPullSecretDelete(ctx context.Context, d *schema.ResourceData,
 	cert := d.Get("kubeseal_cert").(string)
 	secretName := d.Get("secret_name").(string)
 	tmpDir := d.Get("tmp_dir").(string)
+	if len(tmpDir) == 0 {
+		tmpDir = fmt.Sprintf(".tmp/pull_secret/%s/%s", namespace, name)
+	}
 
 	binDir := config.BinDir
 
