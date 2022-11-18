@@ -195,6 +195,9 @@ func resourceGitopsPullSecretDelete(ctx context.Context, d *schema.ResourceData,
 	cert := d.Get("kubeseal_cert").(string)
 	secretName := d.Get("secret_name").(string)
 	tmpDir := d.Get("tmp_dir").(string)
+	if len(tmpDir) == 0 {
+		tmpDir = fmt.Sprintf(".tmp/pull_secret/%s/%s", namespace, name)
+	}
 
 	binDir := config.BinDir
 
