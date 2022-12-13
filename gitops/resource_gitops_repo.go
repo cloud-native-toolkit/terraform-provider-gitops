@@ -139,10 +139,36 @@ func resourceGitopsRepo() *schema.Resource {
 				Description: "The git credentials for the gitops repo(s) in json format",
 				Sensitive:   true,
 			},
-			"result_branch": {
+			"result_host": {
+			    Type:        schema.TypeString,
+			    Computed:    true,
+			    Description: "The host that will be used for the git repo.",
+			},
+			"result_org": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The org that will be used for the git repo.",
+			},
+			"result_project": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The project that will be used for the git repo.",
+			},
+			"result_username": {
+			    Type:        schema.TypeString,
+			    Computed:    true,
+			    Description: "The username that will be used to access the git repo.",
+			},
+			"result_token": {
+			    Type:        schema.TypeString,
+			    Computed:    true,
+			    Description: "The token that will be used to access the git repo.",
+			    Sensitive:   true,
+			},
+			"result_branch": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The branch that will be used for the git repo.",
 			},
 			"result_server_name": {
 				Type:        schema.TypeString,
@@ -222,6 +248,11 @@ type GitopsConfigResult struct {
 }
 
 type GitopsRepoResult struct {
+	Host         string             `yaml:"host" json:"host"`
+	Org          string             `yaml:"org" json:"org"`
+	Project      string             `yaml:"project" json:"project"`
+	Username     string             `yaml:"username" json:"username"`
+	Token        string             `yaml:"token" json:"token"`
 	Url          string             `yaml:"url" json:"url"`
 	Repo         string             `yaml:"repo" json:"repo"`
 	Created      bool               `yaml:"created" json:"created"`
@@ -332,6 +363,31 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 	err = d.Set("git_credentials", gitCredentialJson)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_host", gitopsRepoConfig.Host)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_org", gitopsRepoConfig.Org)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_project", gitopsRepoConfig.Project)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_username", gitopsRepoConfig.Username)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("result_token", gitopsRepoConfig.Token)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -536,6 +592,11 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		return nil, err
 	}
 
+	repoResult.Host = config.Host
+	repoResult.Org = config.Org
+	repoResult.Project = config.Project
+	repoResult.Username = config.Username
+	repoResult.Token = config.Token
 	repoResult.GitopsConfig.Boostrap = repoResult.GitopsConfig.Bootstrap
 
 	tflog.Debug(ctx, fmt.Sprintf("Result values from gitops repo: %s, %s", repoResult.Repo, repoResult.GitopsConfig.Bootstrap.ArgocdConfig.Project))
