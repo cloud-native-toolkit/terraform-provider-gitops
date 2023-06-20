@@ -1,6 +1,6 @@
 module terraform-provider-gitops
 
-go 1.17
+go 1.19
 
 require (
 	github.com/hashicorp/terraform-plugin-log v0.2.0

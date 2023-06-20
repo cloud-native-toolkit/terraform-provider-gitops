@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"os"
 	"path/filepath"
 	mutexkv "terraform-provider-gitops/mutex"
@@ -248,6 +249,9 @@ func getResourceValue(d *schema.ResourceData, name string, defaultValue string) 
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+
+	tflog.Info(ctx, "Configuring GitOps provider")
+
 	binDir := d.Get("bin_dir").(string)
 	lock := d.Get("lock").(string)
 	debug := d.Get("debug").(string)
@@ -262,15 +266,25 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	gitConfig, err := loadGitConfigValues(ctx, d, "")
 	if err != nil {
+		tflog.Error(ctx, "Error loading config values", err)
 		return nil, diag.FromErr(err)
 	}
 
 	if !isValidGitConfig(gitConfig) {
 		gitConfig, err = loadGitConfigValues(ctx, d, "default_")
 		if err != nil {
+			tflog.Error(ctx, "Error loading default config values", err)
 			return nil, diag.FromErr(err)
 		}
 	}
+
+	ctx = tflog.With(ctx, "gitops_binDir", binDir)
+	ctx = tflog.With(ctx, "gitops_repo", repo)
+	ctx = tflog.With(ctx, "gitops_branch", branch)
+	ctx = tflog.With(ctx, "gitops_serverName", serverName)
+	ctx = tflog.With(ctx, "gitops_gitConfig", gitConfig)
+
+	tflog.Debug(ctx, "Creating GitOps provider config")
 
 	c := &ProviderConfig{
 		BinDir:     binDir,
@@ -282,6 +296,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		Lock:       lock,
 		Debug:      debug,
 	}
+
+	tflog.Info(ctx, "Configured Gitops provider", map[string]any{"success": true, "config": c})
 
 	return c, diags
 }
