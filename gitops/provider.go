@@ -297,7 +297,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		Debug:      debug,
 	}
 
-	tflog.Info(ctx, "Configured Gitops provider", map[string]any{"success": true})
+	tflog.Info(ctx, "Configured Gitops provider", map[string]any{"success": true, "config": c})
 
 	return c, diags
 }
