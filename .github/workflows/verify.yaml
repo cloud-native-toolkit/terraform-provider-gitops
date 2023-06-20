@@ -65,11 +65,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete release
-        uses: The-PullRequest-Club/action-delete-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: dev-drprasad/delete-tag-and-release@v1.0
         with:
           tag_name: ${{ steps.releaser.outputs.tag_name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          delete_release: true
 
       - name: Update version in makefile
         id: update
