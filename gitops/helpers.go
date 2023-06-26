@@ -63,7 +63,7 @@ func getIgnoreDiffInput(d *schema.ResourceData) string {
 }
 
 func getPackageNameFilterInput(d *schema.ResourceData) []string {
-	return d.Get("package_name_filter").([]string)
+	return interfacesToStrings(d.Get("package_name_filter").([]interface{}))
 }
 
 type HelmConfig struct {
@@ -138,7 +138,7 @@ type GitopsMetadata struct {
 	Packages []GitopsMetadataPackage
 }
 
-func interfacesToString(list []interface{}) []string {
+func interfacesToStrings(list []interface{}) []string {
 	if list == nil {
 		return nil
 	}
