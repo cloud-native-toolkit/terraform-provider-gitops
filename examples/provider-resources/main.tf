@@ -105,6 +105,6 @@ data gitops_metadata_packages packages {
 resource null_resource package_data {
 
   provisioner "local-exec" {
-    command = "echo 'Package config: ${jsonencode(data.gitops_metadata_packages.packages.result)}'"
+    command = "echo 'Package config: ${jsonencode(data.gitops_metadata_packages.packages.packages)}'"
   }
 }
