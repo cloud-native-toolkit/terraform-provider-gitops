@@ -154,3 +154,17 @@ func interfacesToString(list []interface{}) []string {
 
 	return result
 }
+
+func stringsToInterfaces(sVal *[]string) []interface{} {
+	if sVal != nil {
+		result := make([]interface{}, len(*sVal), len(*sVal))
+
+		for i, val := range *sVal {
+			result[i] = val
+		}
+
+		return result
+	}
+
+	return make([]interface{}, 0)
+}

@@ -143,7 +143,7 @@ func flattenPackageData(packages *[]GitopsMetadataPackage) []interface{} {
 			resultPackage["catalog_source_namespace"] = packageVal.CatalogSourceNamespace
 			resultPackage["default_channel"] = packageVal.DefaultChannel
 			resultPackage["publisher"] = packageVal.Publisher
-			resultPackage["channels"] = packageVal.Channels
+			resultPackage["channels"] = stringsToInterfaces(&packageVal.Channels)
 
 			result[i] = resultPackage
 		}
