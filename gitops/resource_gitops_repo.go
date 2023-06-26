@@ -388,6 +388,7 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	err = d.Set("result_token", gitopsRepoConfig.Token)
+	err = d.Set("result_token", gitopsRepoConfig.Token)
 	if err != nil {
 		return diag.FromErr(err)
 	}

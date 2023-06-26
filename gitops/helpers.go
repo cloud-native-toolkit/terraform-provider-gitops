@@ -6,6 +6,10 @@ func getNameInput(d *schema.ResourceData) string {
 	return d.Get("name").(string)
 }
 
+func getKubeConfigPath(d *schema.ResourceData) string {
+	return d.Get("kube_config_path").(string)
+}
+
 func getNamespaceInput(d *schema.ResourceData) string {
 	return d.Get("namespace").(string)
 }
@@ -58,6 +62,10 @@ func getIgnoreDiffInput(d *schema.ResourceData) string {
 	return d.Get("ignore_diff").(string)
 }
 
+func getPackageNameFilterInput(d *schema.ResourceData) []string {
+	return d.Get("package_name_filter").([]string)
+}
+
 type HelmConfig struct {
 	RepoUrl      string
 	Chart        string
@@ -96,6 +104,38 @@ type GitopsModuleConfig struct {
 	Credentials string
 	Config      string
 	IgnoreDiff  string
+}
+
+type GitopsMetadataConfig struct {
+	Branch         string
+	ServerName     string
+	CaCert         string
+	Debug          string
+	Credentials    string
+	Config         string
+	KubeConfigPath string
+}
+
+type GitopsMetadataCluster struct {
+	DefaultIngressSubdomain string
+	DefaultIngressSecret    string
+	KubeVersion             string
+	OpenShiftVersion        string
+	Type                    string
+}
+
+type GitopsMetadataPackage struct {
+	PackageName            string
+	CatalogSource          string
+	CatalogSourceNamespace string
+	DefaultChannel         string
+	Publisher              string
+	Channels               []string
+}
+
+type GitopsMetadata struct {
+	Cluster  GitopsMetadataCluster
+	Packages []GitopsMetadataPackage
 }
 
 func interfacesToString(list []interface{}) []string {

@@ -4,9 +4,9 @@ import (
 	context "context"
 	b64 "encoding/base64"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"os"
 	"path/filepath"
 	mutexkv "terraform-provider-gitops/mutex"
@@ -151,8 +151,12 @@ func Provider() *schema.Provider {
 			"gitops_service_account": resourceGitopsServiceAccount(),
 			"gitops_seal_secrets":    resourceGitopsSealSecrets(),
 			"gitops_pull_secret":     resourceGitopsPullSecret(),
+			"gitops_metadata":        resourceGitopsMetadata(),
 		},
-		DataSourcesMap:       map[string]*schema.Resource{},
+		DataSourcesMap:       map[string]*schema.Resource{
+			"gitops_metadata_cluster":  dataGitopsMetadataCluster(),
+			"gitops_metadata_packages": dataGitopsMetadataPackages(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
