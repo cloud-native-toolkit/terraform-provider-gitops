@@ -31,10 +31,6 @@ func dataGitopsMetadataCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kube_config_path": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"default_ingress_subdomain": {
 				Type: schema.TypeString,
 				Computed: true,
@@ -72,7 +68,6 @@ func dataGitopsMetadataClusterRead(ctx context.Context, d *schema.ResourceData, 
 	binDir := config.BinDir
 
 	metadataConfig := GitopsMetadataConfig{
-		KubeConfigPath: getKubeConfigPath(d),
 		Branch:         getBranchInput(d),
 		ServerName:     getServerNameInput(d),
 		Credentials:    getCredentialsInput(d),
