@@ -63,11 +63,6 @@ func dataGitopsMetadataPackages() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"channels": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 					},
 				},
 			},
@@ -143,7 +138,6 @@ func flattenPackageData(packages *[]GitopsMetadataPackage) []interface{} {
 			resultPackage["catalog_source_namespace"] = packageVal.CatalogSourceNamespace
 			resultPackage["default_channel"] = packageVal.DefaultChannel
 			resultPackage["publisher"] = packageVal.Publisher
-			resultPackage["channels"] = stringsToInterfaces(&packageVal.Channels)
 
 			result[i] = resultPackage
 		}

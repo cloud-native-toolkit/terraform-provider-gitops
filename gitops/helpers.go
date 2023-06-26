@@ -130,7 +130,6 @@ type GitopsMetadataPackage struct {
 	CatalogSourceNamespace string
 	DefaultChannel         string
 	Publisher              string
-	Channels               []string
 }
 
 type GitopsMetadata struct {
