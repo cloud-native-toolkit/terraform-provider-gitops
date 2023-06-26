@@ -79,17 +79,17 @@ data gitops_metadata_cluster cluster {
 
 resource null_resource cluster_data {
   triggers = {
-    data = {
+    data = jsonencode({
       ingressSubdomain = data.gitops_metadata_cluster.cluster.default_ingress_subdomain
       ingressSecret = data.gitops_metadata_cluster.cluster.default_ingress_secret
       clusterType = data.gitops_metadata_cluster.cluster.cluster_type
       kubeVersion = data.gitops_metadata_cluster.cluster.kube_version
       openShiftVersion = data.gitops_metadata_cluster.cluster.openshift_version
-    }
+    })
   }
 
   provisioner "local-exec" {
-    command = "echo 'Cluster config: ${jsonencode(self.triggers.data)}'"
+    command = "echo 'Cluster config: ${self.triggers.data}'"
   }
 }
 
@@ -105,6 +105,6 @@ data gitops_metadata_packages packages {
 resource null_resource package_data {
 
   provisioner "local-exec" {
-    command = "echo 'Package config: ${jsonencode(data.gitops_metadata_packages.packages.packages)}'"
+    command = "echo 'Package config: ${jsonencode(data.gitops_metadata_packages.packages.result)}'"
   }
 }

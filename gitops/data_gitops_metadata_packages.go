@@ -38,7 +38,7 @@ func dataGitopsMetadataPackages() *schema.Resource {
 				Description: "List of package name filters to returned packages. The values can be regular expressions. Results will be returned in the order of the matching filters. If not provided or an empty list is provided, all packages will be returned.",
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"packages": {
+			"result": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
