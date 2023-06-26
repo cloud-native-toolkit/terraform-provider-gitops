@@ -98,7 +98,7 @@ data gitops_metadata_packages packages {
   branch = local.application_branch
   credentials = var.git_credentials
   config = var.gitops_config
-  filter = ["openshift-gitops-operator", "argocd-operator"]
+  package_name_filter = ["openshift-gitops-operator", "argocd-operator"]
 }
 
 
