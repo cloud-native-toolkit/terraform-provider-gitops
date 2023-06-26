@@ -59,7 +59,7 @@ func resourceGitopsSealSecretsCreate(ctx context.Context, d *schema.ResourceData
 	sourceDir := d.Get("source_dir").(string)
 	destDir := d.Get("dest_dir").(string)
 	cert := d.Get("kubeseal_cert").(string)
-	annotations := interfacesToString(d.Get("annotations").([]interface{}))
+	annotations := interfacesToStrings(d.Get("annotations").([]interface{}))
 	tmpDir := d.Get("tmp_dir").(string)
 
 	binDir := config.BinDir

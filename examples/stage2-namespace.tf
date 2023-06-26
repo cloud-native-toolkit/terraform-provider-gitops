@@ -1,6 +1,7 @@
 
 module cntk_namespace {
   source = "./provider-resources"
+  depends_on = [gitops_metadata.metadata]
 
   namespace       = "provider-test"
   server_name     = gitops_repo.repo.result_server_name

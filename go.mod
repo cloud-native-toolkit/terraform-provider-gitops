@@ -3,6 +3,7 @@ module terraform-provider-gitops
 go 1.19
 
 require (
+	github.com/google/uuid v1.1.2
 	github.com/hashicorp/terraform-plugin-log v0.2.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	gopkg.in/yaml.v3 v3.0.1

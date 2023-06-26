@@ -69,3 +69,42 @@ resource gitops_pull_secret test {
   registry_password = random_password.docker_password.result
   secret_name = "mysecret"
 }
+
+data gitops_metadata_cluster cluster {
+  server_name = var.server_name
+  branch = local.application_branch
+  credentials = var.git_credentials
+  config = var.gitops_config
+}
+
+resource null_resource cluster_data {
+  triggers = {
+    data = jsonencode({
+      ingressSubdomain = data.gitops_metadata_cluster.cluster.default_ingress_subdomain
+      ingressSecret = data.gitops_metadata_cluster.cluster.default_ingress_secret
+      clusterType = data.gitops_metadata_cluster.cluster.cluster_type
+      kubeVersion = data.gitops_metadata_cluster.cluster.kube_version
+      openShiftVersion = data.gitops_metadata_cluster.cluster.openshift_version
+    })
+  }
+
+  provisioner "local-exec" {
+    command = "echo 'Cluster config: ${self.triggers.data}'"
+  }
+}
+
+data gitops_metadata_packages packages {
+  server_name = var.server_name
+  branch = local.application_branch
+  credentials = var.git_credentials
+  config = var.gitops_config
+  package_name_filter = ["openshift-gitops-operator", "argocd-operator"]
+}
+
+
+resource null_resource package_data {
+
+  provisioner "local-exec" {
+    command = "echo 'Package config: ${jsonencode(data.gitops_metadata_packages.packages.packages)}'"
+  }
+}

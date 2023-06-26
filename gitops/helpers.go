@@ -6,6 +6,10 @@ func getNameInput(d *schema.ResourceData) string {
 	return d.Get("name").(string)
 }
 
+func getKubeConfigPath(d *schema.ResourceData) string {
+	return d.Get("kube_config_path").(string)
+}
+
 func getNamespaceInput(d *schema.ResourceData) string {
 	return d.Get("namespace").(string)
 }
@@ -58,6 +62,10 @@ func getIgnoreDiffInput(d *schema.ResourceData) string {
 	return d.Get("ignore_diff").(string)
 }
 
+func getPackageNameFilterInput(d *schema.ResourceData) []string {
+	return interfacesToStrings(d.Get("package_name_filter").([]interface{}))
+}
+
 type HelmConfig struct {
 	RepoUrl      string
 	Chart        string
@@ -98,7 +106,38 @@ type GitopsModuleConfig struct {
 	IgnoreDiff  string
 }
 
-func interfacesToString(list []interface{}) []string {
+type GitopsMetadataConfig struct {
+	Branch         string
+	ServerName     string
+	CaCert         string
+	Debug          string
+	Credentials    string
+	Config         string
+	KubeConfigPath string
+}
+
+type GitopsMetadataCluster struct {
+	DefaultIngressSubdomain string
+	DefaultIngressSecret    string
+	KubeVersion             string
+	OpenShiftVersion        string
+	Type                    string
+}
+
+type GitopsMetadataPackage struct {
+	PackageName            string
+	CatalogSource          string
+	CatalogSourceNamespace string
+	DefaultChannel         string
+	Publisher              string
+}
+
+type GitopsMetadata struct {
+	Cluster  GitopsMetadataCluster
+	Packages []GitopsMetadataPackage
+}
+
+func interfacesToStrings(list []interface{}) []string {
 	if list == nil {
 		return nil
 	}
@@ -113,4 +152,18 @@ func interfacesToString(list []interface{}) []string {
 	}
 
 	return result
+}
+
+func stringsToInterfaces(sVal *[]string) []interface{} {
+	if sVal != nil {
+		result := make([]interface{}, len(*sVal), len(*sVal))
+
+		for i, val := range *sVal {
+			result[i] = val
+		}
+
+		return result
+	}
+
+	return make([]interface{}, 0)
 }

@@ -52,6 +52,9 @@ jobs:
           TF_VAR_git_org: cloud-native-toolkit-test
           TF_VAR_git_username: ${{ secrets.GIT_ADMIN_USERNAME }}
           TF_VAR_git_token: ${{ secrets.GIT_ADMIN_TOKEN }}
+          TF_VAR_server_url: ${{ secrets.SERVER_URL }}
+          TF_VAR_login_user: apikey
+          TF_VAR_login_password: ${{ secrets.SERVER_PASSWORD }}
           TF_LOG_PROVIDER: DEBUG
         run: |
           cd examples
@@ -70,6 +73,9 @@ jobs:
           TF_VAR_git_org: cloud-native-toolkit-test
           TF_VAR_git_username: ${{ secrets.GIT_ADMIN_USERNAME }}
           TF_VAR_git_token: ${{ secrets.GIT_ADMIN_TOKEN }}
+          TF_VAR_server_url: ${{ secrets.SERVER_URL }}
+          TF_VAR_login_user: apikey
+          TF_VAR_login_password: ${{ secrets.SERVER_PASSWORD }}
           TF_LOG_PROVIDER: DEBUG
         run: |
           cd examples

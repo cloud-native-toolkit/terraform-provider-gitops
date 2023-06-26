@@ -188,8 +188,8 @@ func resourceGitopsServiceAccountCreate(ctx context.Context, d *schema.ResourceD
 	clusterScope := d.Get("cluster_scope").(bool)
 	rbacNamespace := d.Get("rbac_namespace").(string)
 	serviceAccountName := d.Get("service_account_name").(string)
-	sccs := interfacesToString(d.Get("sccs").([]interface{}))
-	pullSecrets := interfacesToString(d.Get("pull_secrets").([]interface{}))
+	sccs := interfacesToStrings(d.Get("sccs").([]interface{}))
+	pullSecrets := interfacesToStrings(d.Get("pull_secrets").([]interface{}))
 	rules := getRBACRules(d, "rules")
 	roles := getRBACRoles(d, "roles")
 
@@ -326,10 +326,10 @@ func getRBACRules(d *schema.ResourceData, name string) []RBACRule {
 		i := item.(map[string]interface{})
 
 		rule := RBACRule{
-			ApiGroups:     interfacesToString(i["api_groups"].([]interface{})),
-			Resources:     interfacesToString(i["resources"].([]interface{})),
-			ResourceNames: interfacesToString(i["resource_names"].([]interface{})),
-			Verbs:         interfacesToString(i["verbs"].([]interface{})),
+			ApiGroups:     interfacesToStrings(i["api_groups"].([]interface{})),
+			Resources:     interfacesToStrings(i["resources"].([]interface{})),
+			ResourceNames: interfacesToStrings(i["resource_names"].([]interface{})),
+			Verbs:         interfacesToStrings(i["verbs"].([]interface{})),
 		}
 
 		rules = append(rules, rule)

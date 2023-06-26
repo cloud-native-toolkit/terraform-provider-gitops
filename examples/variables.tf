@@ -20,3 +20,18 @@ variable "git_username" {
 variable "gitops_namespace" {
   default = "openshift-gitops"
 }
+
+variable "server_url" {
+}
+
+variable "login_user" {
+  default = ""
+}
+
+variable "login_password" {
+  default = ""
+}
+
+variable "login_token" {
+  default = ""
+}
