@@ -154,6 +154,7 @@ func Provider() *schema.Provider {
 			"gitops_metadata":        resourceGitopsMetadata(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{
+			"gitops_repo_config": dataGitopsRepoConfig(),
 			"gitops_metadata_cluster":  dataGitopsMetadataCluster(),
 			"gitops_metadata_packages": dataGitopsMetadataPackages(),
 		},
