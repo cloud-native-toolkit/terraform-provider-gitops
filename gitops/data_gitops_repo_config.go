@@ -92,15 +92,6 @@ func dataGitopsRepoConfigRead(ctx context.Context, d *schema.ResourceData, m int
 
 	binDir := config.BinDir
 
-	gitConfig, err := loadGitConfigValues(ctx, d, "")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if !isValidGitConfig(gitConfig) {
-		gitConfig = config.GitConfig
-	}
-
 	repoReadConfig := GitopsRepoReadConfig{
 		ServerName:   getServerNameInput(d),
 		Branch:       getBranchInput(d),
