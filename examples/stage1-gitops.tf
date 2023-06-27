@@ -15,6 +15,26 @@ resource gitops_repo repo {
   strict = true
 }
 
+data gitops_repo_config repo {
+  server_name = gitops_repo.repo.result_server_name
+  branch = gitops_repo.repo.result_branch
+  bootstrap_url = gitops_repo.repo.url
+  username = gitops_repo.repo.result_username
+  token = gitops_repo.repo.result_token
+  ca_cert = gitops_repo.repo.result_ca_cert
+  ca_cert_file = gitops_repo.repo.result_ca_cert_file
+}
+
+resource null_resource config_output {
+  triggers = {
+    config = jsonencode(data.gitops_repo_config.repo.gitops_config)
+  }
+
+  provisioner "local-exec" {
+    command = "echo 'Config output: ${self.triggers.config}'"
+  }
+}
+
 resource gitops_repo repo2 {
   depends_on = [gitops_repo.repo]
 
