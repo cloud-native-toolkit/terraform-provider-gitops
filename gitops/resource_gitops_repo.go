@@ -22,6 +22,12 @@ func resourceGitopsRepo() *schema.Resource {
 		UpdateContext: resourceGitopsRepoUpdate,
 		DeleteContext: resourceGitopsRepoDelete,
 		Schema: map[string]*schema.Schema{
+			"repo_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The url of the git server.",
+				Default:     "",
+			},
 			"host": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -190,6 +196,7 @@ func resourceGitopsRepo() *schema.Resource {
 }
 
 type GitopsRepoConfig struct {
+	Url               string `yaml:"url"`
 	Host              string `yaml:"host"`
 	Org               string `yaml:"org"`
 	Project           string `yaml:"project,omitempty"`
@@ -296,6 +303,7 @@ func resourceGitopsRepoCreate(ctx context.Context, d *schema.ResourceData, m int
 		Username:          gitConfig.Username,
 		Token:             gitConfig.Token,
 		CaCertFile:        gitConfig.CaCertFile,
+		Url:               getResourceValue(d, "repo_url", ""),
 		Repo:              getResourceValue(d, "repo", config.Repo),
 		Branch:            getResourceValue(d, "branch", config.Branch),
 		ServerName:        getResourceValue(d, "server_name", config.ServerName),
@@ -505,16 +513,29 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		return nil, errors.New("repo name must be provided")
 	}
 
-	var args = []string{
-		"gitops-init",
-		config.Repo,
-		"--output", "jsonfile=./output.json",
-		"--host", config.Host,
-		"--org", config.Org,
-		"--branch", config.Branch,
-		"--serverName", config.ServerName,
-		"--tmpDir", config.TmpDir,
-		"--debug",
+	var args = []string{}
+	if len(config.Url) > 0 {
+		args = []string{
+			"gitops-init",
+			config.Url,
+			"--output", "jsonfile=./output.json",
+			"--branch", config.Branch,
+			"--serverName", config.ServerName,
+			"--tmpDir", config.TmpDir,
+			"--debug",
+		}
+	} else {
+		args = []string{
+			"gitops-init",
+			config.Repo,
+			"--output", "jsonfile=./output.json",
+			"--host", config.Host,
+			"--org", config.Org,
+			"--branch", config.Branch,
+			"--serverName", config.ServerName,
+			"--tmpDir", config.TmpDir,
+			"--debug",
+		}
 	}
 
 	if len(config.Project) > 0 {
@@ -523,6 +544,10 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 
 	if len(config.CaCertFile) > 0 {
 		args = append(args, "--caCertFile", config.CaCertFile)
+	}
+
+	if len(config.GitopsNamespace) > 0 {
+		args = append(args, "--argocdNamespace", config.GitopsNamespace)
 	}
 
 	if config.Public {
