@@ -477,6 +477,7 @@ func resourceGitopsRepoDelete(ctx context.Context, d *schema.ResourceData, m int
 		Username:          gitConfig.Username,
 		Token:             gitConfig.Token,
 		CaCertFile:        gitConfig.CaCertFile,
+		Url:               getResourceValue(d, "repo_url", ""),
 		Repo:              getResourceValue(d, "repo", config.Repo),
 		Branch:            getResourceValue(d, "branch", config.Branch),
 		ServerName:        getResourceValue(d, "server_name", config.ServerName),
@@ -509,10 +510,6 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 
 	tflog.Info(ctx, fmt.Sprintf("Provisioning gitops repo: host=%s, org=%s, project=%s, repo=%s", config.Host, config.Org, config.Project, config.Repo))
 
-	if len(config.Repo) == 0 {
-		return nil, errors.New("repo name must be provided")
-	}
-
 	var args = []string{}
 	if len(config.Url) > 0 {
 		args = []string{
@@ -524,7 +521,7 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 			"--tmpDir", config.TmpDir,
 			"--debug",
 		}
-	} else {
+	} else if len(config.Repo) > 0 {
 		args = []string{
 			"gitops-init",
 			config.Repo,
@@ -536,6 +533,8 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 			"--tmpDir", config.TmpDir,
 			"--debug",
 		}
+	} else {
+		return nil, errors.New("repo name or repo url must be provided")
 	}
 
 	if len(config.Project) > 0 {
