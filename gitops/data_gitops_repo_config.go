@@ -179,7 +179,7 @@ func lookupGitopRepoConfig(ctx context.Context, input *GitopsRepoReadConfig) (*G
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_EMAIL="+gitEmail)
 	updatedEnv = append(updatedEnv, "GIT_COMMITTER_NAME="+gitName)
 
-	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", updatedEnv))
+	logEnvironment(ctx, &updatedEnv)
 
 	cmd.Env = updatedEnv
 

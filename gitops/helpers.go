@@ -1,6 +1,12 @@
 package gitops
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"context"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"regexp"
+)
 
 func getNameInput(d *schema.ResourceData) string {
 	return d.Get("name").(string)
@@ -166,4 +172,43 @@ func stringsToInterfaces(sVal *[]string) []interface{} {
 	}
 
 	return make([]interface{}, 0)
+}
+
+func logEnvironment(ctx context.Context, env *[]string) {
+	newEnv := *removeItem(env, "^GIT_CREDENTIALS")
+
+	if len(*env) != len(newEnv) {
+		newEnv = append(newEnv, "GIT_CREDENTIALS=**redacted**")
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Environment: %v", newEnv))
+}
+
+func findItem(env *[]string, match string) int {
+	r, _ := regexp.Compile(match)
+	for i := 0; i < len(*env); i++ {
+		if r.MatchString((*env)[i]) {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func removeItem(env *[]string, match string) *[]string {
+	pos := findItem(env, match)
+
+	if pos == -1 {
+		return env
+	}
+
+	result := make([]string, len(*env) - 1)
+
+	for i := 0; i < len(*env); i++ {
+		if i != pos {
+			result = append(result, (*env)[i])
+		}
+	}
+
+	return &result
 }

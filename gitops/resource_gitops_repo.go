@@ -574,7 +574,7 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		updatedEnv = append(updatedEnv, "KUBESEAL_CERT="+config.SealedSecretsCert)
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Environment variables set: %s", envNames))
+	logEnvironment(ctx, &updatedEnv)
 	cmd.Env = updatedEnv
 
 	var outb, errb bytes.Buffer
