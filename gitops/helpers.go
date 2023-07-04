@@ -128,6 +128,7 @@ type GitopsMetadataCluster struct {
 	KubeVersion             string
 	OpenShiftVersion        string
 	Type                    string
+	OperatorNamespace       string
 }
 
 type GitopsMetadataPackage struct {
