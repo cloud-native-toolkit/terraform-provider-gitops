@@ -85,6 +85,7 @@ resource null_resource cluster_data {
       clusterType = data.gitops_metadata_cluster.cluster.cluster_type
       kubeVersion = data.gitops_metadata_cluster.cluster.kube_version
       openShiftVersion = data.gitops_metadata_cluster.cluster.openshift_version
+      operatorNamespace = data.gitops_metadata_cluster.cluster.operator_namespace
     })
   }
 

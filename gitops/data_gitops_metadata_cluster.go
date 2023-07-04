@@ -56,6 +56,11 @@ func dataGitopsMetadataCluster() *schema.Resource {
 				Computed: true,
 				Description: "The OpenShift version of the cluster. If the cluster is not an OpenShift cluster this value will be empty",
 			},
+			"operator_namespace": {
+				Type: schema.TypeString,
+				Computed: true,
+				Description: "The namespace where the cluster-wide operators are installed in the cluster",
+			},
 		},
 	}
 }
@@ -86,6 +91,7 @@ func dataGitopsMetadataClusterRead(ctx context.Context, d *schema.ResourceData, 
 	err = d.Set("openshift_version", gitopsMetadata.Cluster.OpenShiftVersion)
 	err = d.Set("default_ingress_subdomain", gitopsMetadata.Cluster.DefaultIngressSubdomain)
 	err = d.Set("default_ingress_secret", gitopsMetadata.Cluster.DefaultIngressSecret)
+	err = d.Set("operator_namespace", gitopsMetadata.Cluster.OperatorNamespace)
 
 	id := uuid.New().String()
 	d.SetId(id)
