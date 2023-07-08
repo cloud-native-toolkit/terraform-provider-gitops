@@ -36,6 +36,10 @@ func getGitopsConfigInput(d *schema.ResourceData) string {
 	return d.Get("config").(string)
 }
 
+func getGitopsNamespaceInput(d *schema.ResourceData) string {
+	return d.Get("gitops_namespace").(string)
+}
+
 func getLayerInput(d *schema.ResourceData) string {
 	return d.Get("layer").(string)
 }
@@ -113,13 +117,14 @@ type GitopsModuleConfig struct {
 }
 
 type GitopsMetadataConfig struct {
-	Branch         string
-	ServerName     string
-	CaCert         string
-	Debug          string
-	Credentials    string
-	Config         string
-	KubeConfigPath string
+	Branch          string
+	ServerName      string
+	CaCert          string
+	Debug           string
+	Credentials     string
+	Config          string
+	KubeConfigPath  string
+	GitopsNamespace string
 }
 
 type GitopsMetadataCluster struct {
@@ -129,6 +134,7 @@ type GitopsMetadataCluster struct {
 	OpenShiftVersion        string
 	Type                    string
 	OperatorNamespace       string
+	GitopsNamespace         string
 }
 
 type GitopsMetadataPackage struct {
