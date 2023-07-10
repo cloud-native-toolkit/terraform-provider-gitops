@@ -61,6 +61,11 @@ func dataGitopsMetadataCluster() *schema.Resource {
 				Computed: true,
 				Description: "The namespace where the cluster-wide operators are installed in the cluster",
 			},
+			"gitops_namespace": {
+				Type: schema.TypeString,
+				Computed: true,
+				Description: "The namespace where the gitops instance is installed in the cluster",
+			},
 		},
 	}
 }
@@ -92,6 +97,7 @@ func dataGitopsMetadataClusterRead(ctx context.Context, d *schema.ResourceData, 
 	err = d.Set("default_ingress_subdomain", gitopsMetadata.Cluster.DefaultIngressSubdomain)
 	err = d.Set("default_ingress_secret", gitopsMetadata.Cluster.DefaultIngressSecret)
 	err = d.Set("operator_namespace", gitopsMetadata.Cluster.OperatorNamespace)
+	err = d.Set("gitops_namespace", gitopsMetadata.Cluster.GitopsNamespace)
 
 	id := uuid.New().String()
 	d.SetId(id)

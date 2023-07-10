@@ -25,6 +25,10 @@ func resourceGitopsMetadata() *schema.Resource {
 				Optional: true,
 				Default:  "default",
 			},
+			"gitops_namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"branch": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -58,6 +62,7 @@ func resourceGitopsMetadataCreate(ctx context.Context, d *schema.ResourceData, m
 		ServerName:     getServerNameInput(d),
 		Credentials:    getCredentialsInput(d),
 		Config:         getGitopsConfigInput(d),
+		GitopsNamespace: getGitopsNamespaceInput(d),
 		CaCert:         config.GitConfig.CaCertFile,
 		Debug:          config.Debug,
 	}
@@ -131,6 +136,9 @@ func populateGitopsMetadata(ctx context.Context, binDir string, gitopsConfig Git
 
 	if len(gitopsConfig.CaCert) > 0 {
 		args = append(args, "--caCert", gitopsConfig.CaCert)
+	}
+	if len(gitopsConfig.GitopsNamespace) > 0 {
+		args = append(args, "--gitopsNamespace", gitopsConfig.GitopsNamespace)
 	}
 	if len(gitopsConfig.Debug) > 0 {
 		args = append(args, "--debug", gitopsConfig.Debug)
