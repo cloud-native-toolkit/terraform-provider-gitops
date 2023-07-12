@@ -172,6 +172,7 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	outfilePipeIn, err := os.Create(destFile)
 	if err != nil {

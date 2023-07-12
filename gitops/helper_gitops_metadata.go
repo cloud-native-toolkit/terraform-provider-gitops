@@ -38,6 +38,7 @@ func readGitopsMetadata(ctx context.Context, binDir string, gitopsConfig GitopsM
 	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"

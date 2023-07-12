@@ -564,6 +564,7 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 	cmd.Path = pathWithBinDir(config.BinDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	envNames := []string{"GIT_USERNAME", "GIT_TOKEN"}
 

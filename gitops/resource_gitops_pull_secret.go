@@ -271,6 +271,7 @@ func createSecret(ctx context.Context, binDir string, destDir string, fileName s
 	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	err := os.MkdirAll(destDir, os.ModePerm)
 	if err != nil {

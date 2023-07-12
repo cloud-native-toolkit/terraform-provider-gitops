@@ -166,6 +166,7 @@ func lookupGitopRepoConfig(ctx context.Context, input *GitopsRepoReadConfig) (*G
 	cmd.Path = pathWithBinDir(input.BinDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"
