@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"os"
+	"path"
 	"regexp"
+	"strings"
 )
 
 func getNameInput(d *schema.ResourceData) string {
@@ -218,4 +221,27 @@ func removeItem(env *[]string, match string) *[]string {
 	}
 
 	return &result
+}
+
+func pathWithBinDir(binDir string) string {
+	currentPath := os.Getenv("PATH")
+
+	if len(binDir) == 0 {
+		return currentPath
+	}
+
+	if !strings.HasPrefix(binDir, "/") {
+		cwd, err := os.Getwd()
+		if err != nil {
+			cwd = "."
+		}
+
+		binDir = path.Join(cwd, binDir)
+	}
+
+	if strings.HasPrefix(currentPath, binDir) {
+		return currentPath
+	}
+
+	return fmt.Sprintf("%s:%s", binDir, currentPath)
 }

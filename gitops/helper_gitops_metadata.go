@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func readGitopsMetadata(ctx context.Context, binDir string, gitopsConfig GitopsMetadataConfig) (*GitopsMetadata, error) {
@@ -35,7 +34,8 @@ func readGitopsMetadata(ctx context.Context, binDir string, gitopsConfig GitopsM
 		args = append(args, "--debug", gitopsConfig.Debug)
 	}
 
-	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
+	cmd := exec.Command("igc", args...)
+	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
 

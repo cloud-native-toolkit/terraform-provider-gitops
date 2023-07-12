@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func resourceGitopsNamespace() *schema.Resource {
@@ -183,7 +182,8 @@ func resourceGitopsNamespaceCreate(ctx context.Context, d *schema.ResourceData, 
 		args = append(args, "--debug", debug)
 	}
 
-	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
+	cmd := exec.Command("igc", args...)
+	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
@@ -312,7 +312,8 @@ func resourceGitopsNamespaceDelete(ctx context.Context, d *schema.ResourceData, 
 		args = append(args, "--debug", debug)
 	}
 
-	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
+	cmd := exec.Command("igc", args...)
+	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
 
