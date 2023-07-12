@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func resourceGitopsModule() *schema.Resource {
@@ -221,9 +220,11 @@ func populateGitopsModule(ctx context.Context, binDir string, gitopsConfig Gitop
 		args = append(args, "--ignoreDiff", gitopsConfig.IgnoreDiff)
 	}
 
-	cmd := exec.Command(filepath.Join(binDir, "igc"), args...)
+	cmd := exec.Command("igc", args...)
+	cmd.Path = pathWithBinDir(binDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"

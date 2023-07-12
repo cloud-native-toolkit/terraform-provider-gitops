@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"os"
-	"os/exec"
-	"path/filepath"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"os"
+	"os/exec"
 )
 
 func dataGitopsRepoConfig() *schema.Resource {
@@ -164,9 +162,11 @@ func lookupGitopRepoConfig(ctx context.Context, input *GitopsRepoReadConfig) (*G
 		args = append(args, "--debug", input.Debug)
 	}
 
-	cmd := exec.Command(filepath.Join(input.BinDir, "igc"), args...)
+	cmd := exec.Command("igc", args...)
+	cmd.Path = pathWithBinDir(input.BinDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	gitEmail := "cloudnativetoolkit@gmail.com"
 	gitName := "Cloud Native Toolkit"

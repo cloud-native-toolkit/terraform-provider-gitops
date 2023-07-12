@@ -12,7 +12,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func resourceGitopsRepo() *schema.Resource {
@@ -561,9 +560,11 @@ func processGitopsRepo(ctx context.Context, config GitopsRepoConfig, delete bool
 		args = append(args, "--delete")
 	}
 
-	cmd := exec.Command(filepath.Join(config.BinDir, "igc"), args...)
+	cmd := exec.Command("igc", args...)
+	cmd.Path = pathWithBinDir(config.BinDir)
 
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	envNames := []string{"GIT_USERNAME", "GIT_TOKEN"}
 

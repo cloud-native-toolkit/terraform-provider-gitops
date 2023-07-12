@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
@@ -169,8 +168,11 @@ func encryptFile(ctx context.Context, args []string, binDir string, sourceDir st
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
 	tflog.Debug(ctx, "Encrypted secret destination file: "+destFile)
 
-	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
+	cmd := exec.Command("kubeseal", args...)
+	cmd.Path = pathWithBinDir(binDir)
+
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	outfilePipeIn, err := os.Create(destFile)
 	if err != nil {
@@ -214,7 +216,8 @@ func encryptFileWithAnnotations(ctx context.Context, args []string, binDir strin
 	}
 	fReader := bufio.NewReader(f)
 
-	cmd := exec.Command(filepath.Join(binDir, "kubeseal"), args...)
+	cmd := exec.Command("kubeseal", args...)
+	cmd.Path = pathWithBinDir(binDir)
 
 	destFile := fmt.Sprintf("%s/%s", destDir, fileName)
 
@@ -227,7 +230,8 @@ func encryptFileWithAnnotations(ctx context.Context, args []string, binDir strin
 
 	annotationArgs = append(annotationArgs, annotations...)
 
-	cmd2 := exec.Command(filepath.Join(binDir, "kubectl"), annotationArgs...)
+	cmd2 := exec.Command("kubectl", annotationArgs...)
+	cmd2.Path = pathWithBinDir(binDir)
 
 	outfilePipeIn, err := os.Create(destFile)
 	if err != nil {

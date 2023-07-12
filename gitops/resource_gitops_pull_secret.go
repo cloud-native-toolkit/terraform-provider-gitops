@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 )
 
 func resourceGitopsPullSecret() *schema.Resource {
@@ -268,8 +267,11 @@ func createSecret(ctx context.Context, binDir string, destDir string, fileName s
 		"--dry-run=client",
 		"--output=json"}
 
-	cmd := exec.Command(filepath.Join(binDir, "kubectl"), args...)
+	cmd := exec.Command("kubectl", args...)
+	cmd.Path = pathWithBinDir(binDir)
+
 	tflog.Debug(ctx, "Executing command: "+cmd.String())
+	tflog.Debug(ctx, "  Command path: "+cmd.Path)
 
 	err := os.MkdirAll(destDir, os.ModePerm)
 	if err != nil {
